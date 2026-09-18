@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface AuditParams {
   action: string;
@@ -13,12 +14,15 @@ interface AuditParams {
 
 export async function writeAudit(params: AuditParams) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    // 1) Ambil user saat ini pakai auth client (untuk actor_user_id)
+    const authClient = await createClient();
+    const { data: { user } } = await authClient.auth.getUser();
 
-    await supabase.from("audit_logs").insert({
-      actor_user_id: user.id,
+    // 2) Insert via service role (bypass RLS) — audit tidak boleh diblokir user biasa
+    const admin = createAdminClient();
+
+    const { error } = await admin.from("audit_logs").insert({
+      actor_user_id: user?.id ?? null,
       action: params.action,
       module: params.module,
       resource_type: params.resourceType ?? null,
@@ -28,7 +32,18 @@ export async function writeAudit(params: AuditParams) {
       reason: params.reason ?? null,
       result: params.result ?? "SUCCESS",
     });
+
+    if (error) {
+      // Log ke console server agar terlihat di terminal CMD / Vercel logs
+      console.error("[writeAudit] insert failed:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        payload: params,
+      });
+    }
   } catch (e) {
-    console.error("audit write failed", e);
+    console.error("[writeAudit] unexpected error:", e);
   }
 }
