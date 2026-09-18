@@ -33,6 +33,11 @@ import {
 } from "@/features/orders/actions";
 import type { OrderItemInput } from "@/lib/validation/orders";
 
+import { ProcurementTab } from "./_flow/procurement-tab";
+import { ShipmentTab } from "./_flow/shipment-tab";
+import { DeliveryTab } from "./_flow/delivery-tab";
+import { BastTab } from "./_flow/bast-tab";
+
 // ============================ TYPES ============================
 
 type Order = {
@@ -113,8 +118,69 @@ type Approval = {
 type ProductOption = { id: string; code: string; name: string; uom: string };
 type SiteOption = { id: string; code: string; name: string };
 type ContractOption = { id: string; code: string; name: string; currency: string };
+type VendorOption = { id: string; code: string; name: string };
+type TransporterOption = { id: string; code: string; name: string; plate_number: string | null };
 
-type Tab = "overview" | "items" | "flow" | "activity";
+type ProcurementRow = {
+  id: string;
+  procurement_number: string;
+  vendor_id: string | null;
+  vendor_po: string | null;
+  vendor_invoice: string | null;
+  reference_date: string | null;
+  currency: string;
+  exchange_rate: number;
+  material_cost: number;
+  status: string;
+  remarks: string | null;
+  created_at: string;
+  vendors?: { name: string } | null;
+};
+
+type ShipmentRow = {
+  id: string;
+  shipment_number: string;
+  shipment_date: string | null;
+  transporter_id: string | null;
+  vehicle_ref: string | null;
+  origin: string | null;
+  destination: string | null;
+  delivery_ref: string | null;
+  status: string;
+  remarks: string | null;
+  transporters?: { name: string } | null;
+};
+
+type DeliveryRow = {
+  id: string;
+  delivery_number: string;
+  delivery_date: string;
+  receiving_party: string | null;
+  delivery_note: string | null;
+  location: string | null;
+  status: string;
+};
+
+type BastRow = {
+  id: string;
+  bast_number: string;
+  bast_date: string | null;
+  receiver_name: string | null;
+  signed_by: string | null;
+  signed_document_ref: string | null;
+  remarks: string | null;
+  status: string;
+};
+
+type Tab =
+  | "overview"
+  | "items"
+  | "flow"
+  | "procurement"
+  | "shipment"
+  | "delivery"
+  | "bast"
+  | "activity";
 
 type DraftState = {
   customer_id: string;
@@ -140,6 +206,13 @@ export function OrderDetail({
   sites,
   contracts,
   products,
+  procurements,
+  shipments,
+  deliveries,
+  basts,
+  vendors,
+  transporters,
+  orderItemsRef,
   currentUserId,
   permissions,
 }: {
@@ -150,6 +223,13 @@ export function OrderDetail({
   sites: SiteOption[];
   contracts: ContractOption[];
   products: ProductOption[];
+  procurements: ProcurementRow[];
+  shipments: ShipmentRow[];
+  deliveries: DeliveryRow[];
+  basts: BastRow[];
+  vendors: VendorOption[];
+  transporters: TransporterOption[];
+  orderItemsRef: { product_id: string; qty: number; uom: string }[];
   currentUserId: string;
   permissions: string[];
 }) {
@@ -174,6 +254,19 @@ export function OrderDetail({
   const canReviewApprovals =
     permissions.includes("ORDER_AMEND_APPROVE") ||
     permissions.includes("ORDER_CANCEL_APPROVE");
+
+  const flowEditable = [
+    "APPROVED",
+    "ISSUED",
+    "IN_PROGRESS",
+    "PARTIALLY_FULFILLED",
+  ].includes(order.status);
+  const bastEditable = [
+    "IN_PROGRESS",
+    "PARTIALLY_FULFILLED",
+    "FULFILLED",
+    "CLOSED",
+  ].includes(order.status);
 
   // Modal states
   const [showReturn, setShowReturn] = useState(false);
@@ -263,23 +356,23 @@ export function OrderDetail({
 
   function doSubmit() {
     setError(null);
-    // Pastikan pakai data dari draft state (jika user belum save, tetap ambil dari state)
     const payload = {
       ...draft,
       po_number: draft.po_number,
       po_date: draft.po_date,
-      items: draftItems.length > 0
-        ? draftItems.map(({ _key, ...rest }) => rest)
-        : items.map((it) => ({
-            id: it.id,
-            product_id: it.product_id,
-            description: it.description,
-            qty: Number(it.qty),
-            uom: it.uom,
-            unit_price: Number(it.unit_price),
-            currency: it.currency,
-            exchange_rate: Number(it.exchange_rate),
-          })),
+      items:
+        draftItems.length > 0
+          ? draftItems.map(({ _key, ...rest }) => rest)
+          : items.map((it) => ({
+              id: it.id,
+              product_id: it.product_id,
+              description: it.description,
+              qty: Number(it.qty),
+              uom: it.uom,
+              unit_price: Number(it.unit_price),
+              currency: it.currency,
+              exchange_rate: Number(it.exchange_rate),
+            })),
     };
     startTransition(async () => {
       const result = await submitOrder(order.id, payload);
@@ -373,6 +466,17 @@ export function OrderDetail({
     Boolean(order.last_amendment_from_status);
 
   const display = getDisplayStatus(order);
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "overview", label: "Overview" },
+    { key: "items", label: "Items" },
+    { key: "flow", label: "Flow" },
+    { key: "procurement", label: "Procurement" },
+    { key: "shipment", label: "Shipment" },
+    { key: "delivery", label: "Delivery" },
+    { key: "bast", label: "BAST" },
+    { key: "activity", label: "Activity" },
+  ];
 
   // ---------------- Render ----------------
   return (
@@ -567,23 +671,17 @@ export function OrderDetail({
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-[#E5E5EA] rounded-xl">
             <div className="px-2 border-b border-[#E5E5EA] flex overflow-x-auto">
-              {(["overview", "items", "flow", "activity"] as Tab[]).map((t) => (
+              {TABS.map((t) => (
                 <button
-                  key={t}
-                  onClick={() => setTab(t)}
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
                   className={`h-11 px-4 text-sm border-b-2 -mb-px transition whitespace-nowrap ${
-                    tab === t
+                    tab === t.key
                       ? "border-[#0A84FF] text-[#0A84FF] font-medium"
                       : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"
                   }`}
                 >
-                  {t === "overview"
-                    ? "Overview"
-                    : t === "items"
-                      ? "Items"
-                      : t === "flow"
-                        ? "Flow"
-                        : "Activity"}
+                  {t.label}
                 </button>
               ))}
             </div>
@@ -614,6 +712,47 @@ export function OrderDetail({
               )}
 
               {tab === "flow" && <FlowTab order={order} />}
+
+              {tab === "procurement" && (
+                <ProcurementTab
+                  orderId={order.id}
+                  procurements={procurements}
+                  vendors={vendors}
+                  products={products}
+                  permissions={permissions}
+                  canEdit={flowEditable}
+                />
+              )}
+
+              {tab === "shipment" && (
+                <ShipmentTab
+                  orderId={order.id}
+                  shipments={shipments}
+                  transporters={transporters}
+                  products={products}
+                  orderItems={orderItemsRef}
+                  permissions={permissions}
+                  canEdit={flowEditable}
+                />
+              )}
+
+              {tab === "delivery" && (
+                <DeliveryTab
+                  orderId={order.id}
+                  shipments={shipments}
+                  deliveries={deliveries}
+                  permissions={permissions}
+                />
+              )}
+
+              {tab === "bast" && (
+                <BastTab
+                  orderId={order.id}
+                  basts={basts}
+                  permissions={permissions}
+                  canCreate={bastEditable}
+                />
+              )}
 
               {tab === "activity" && <ActivityTab history={history} />}
             </div>
@@ -677,6 +816,24 @@ export function OrderDetail({
                     : "—"
                 }
               />
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+              Flow Counters
+            </h2>
+            <div className="space-y-3 text-sm">
+              <SummaryRow
+                label="Procurements"
+                value={String(procurements.length)}
+              />
+              <SummaryRow label="Shipments" value={String(shipments.length)} />
+              <SummaryRow
+                label="Deliveries"
+                value={String(deliveries.length)}
+              />
+              <SummaryRow label="BASTs" value={String(basts.length)} />
             </div>
           </div>
         </aside>
@@ -1073,7 +1230,9 @@ function ItemsTab({
                 <TD>
                   <Input
                     value={it.uom}
-                    onChange={(e) => onUpdate(it._key, { uom: e.target.value })}
+                    onChange={(e) =>
+                      onUpdate(it._key, { uom: e.target.value })
+                    }
                     className="w-20"
                   />
                 </TD>
@@ -1115,8 +1274,16 @@ function ItemsTab({
 function FlowTab({ order }: { order: Order }) {
   const stages: { key: string; label: string; status: string }[] = [
     { key: "PO", label: "PO", status: order.po_status },
-    { key: "COMPLIANCE", label: "Compliance", status: order.compliance_status },
-    { key: "PROCUREMENT", label: "Procurement", status: order.procurement_status },
+    {
+      key: "COMPLIANCE",
+      label: "Compliance",
+      status: order.compliance_status,
+    },
+    {
+      key: "PROCUREMENT",
+      label: "Procurement",
+      status: order.procurement_status,
+    },
     { key: "SHIPMENT", label: "Shipment", status: order.shipment_status },
     { key: "DELIVERY", label: "Delivery", status: order.delivery_status },
     { key: "BAST", label: "BAST", status: order.bast_status },
