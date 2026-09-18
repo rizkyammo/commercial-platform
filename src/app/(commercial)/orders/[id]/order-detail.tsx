@@ -43,6 +43,7 @@ import { ProcurementTab } from "./_flow/procurement-tab";
 import { ShipmentTab } from "./_flow/shipment-tab";
 import { DeliveryTab } from "./_flow/delivery-tab";
 import { BastTab } from "./_flow/bast-tab";
+import { InvoiceTab } from "./_flow/invoice-tab";
 
 // ============================ TYPES ============================
 
@@ -125,7 +126,12 @@ type Approval = {
 
 type ProductOption = { id: string; code: string; name: string; uom: string };
 type SiteOption = { id: string; code: string; name: string };
-type ContractOption = { id: string; code: string; name: string; currency: string };
+type ContractOption = {
+  id: string;
+  code: string;
+  name: string;
+  currency: string;
+};
 type VendorOption = { id: string; code: string; name: string };
 type TransporterOption = { id: string; code: string; name: string };
 
@@ -181,6 +187,31 @@ type BastRow = {
   status: string;
 };
 
+type InvoiceRow = {
+  id: string;
+  invoice_number: string;
+  invoice_ref: string | null;
+  invoice_type: string;
+  invoice_date: string;
+  due_date: string | null;
+  currency: string;
+  amount_with_tax: number;
+  paid_amount: number;
+  status: string;
+};
+
+type InvoiceSummary = {
+  selling: number;
+  totalInvoiced: number;
+  totalWithTax: number;
+  totalPaid: number;
+  outstanding: number;
+  uninvoiced: number;
+  overdueCount: number;
+  invoiceCount: number;
+  currency: string;
+};
+
 type ComplianceData = {
   items: {
     product_id: string;
@@ -211,6 +242,7 @@ type Tab =
   | "shipment"
   | "delivery"
   | "bast"
+  | "invoice"
   | "activity";
 
 type DraftState = {
@@ -241,6 +273,8 @@ export function OrderDetail({
   shipments,
   deliveries,
   basts,
+  invoices,
+  invoiceSummary,
   vendors,
   transporters,
   orderItemsRef,
@@ -260,6 +294,8 @@ export function OrderDetail({
   shipments: ShipmentRow[];
   deliveries: DeliveryRow[];
   basts: BastRow[];
+  invoices: InvoiceRow[];
+  invoiceSummary: InvoiceSummary;
   vendors: VendorOption[];
   transporters: TransporterOption[];
   orderItemsRef: { product_id: string; qty: number; uom: string }[];
@@ -293,28 +329,21 @@ export function OrderDetail({
     permissions.includes("ORDER_CANCEL_APPROVE");
 
   // Sequential stage guards
-const procurementEditable = [
-  "ISSUED",
-  "IN_PROGRESS",
-  "PARTIALLY_FULFILLED",
-].includes(order.status);
+  const procurementEditable = [
+    "ISSUED",
+    "IN_PROGRESS",
+    "PARTIALLY_FULFILLED",
+  ].includes(order.status);
 
-// Shipment boleh dibuat kalau:
-// - order masih dalam siklus aktif (belum FULFILLED/CLOSED)
-// - DAN coverage sudah 100% verified
-const shipmentEditable = procurementEditable && coverage.all_verified;
+  const shipmentEditable = procurementEditable && coverage.all_verified;
 
-const hasDelivery = deliveries.length > 0;
+  const hasDelivery = deliveries.length > 0;
+  const hasCompletedBast = basts.some((b) => b.status === "COMPLETED");
 
-// BAST boleh dibuat kalau:
-// - ada delivery
-// - order aktif (belum CLOSED)
-// - belum ada BAST yang completed
-const hasCompletedBast = basts.some((b) => b.status === "COMPLETED");
-const bastEditable =
-  hasDelivery &&
-  !hasCompletedBast &&
-  ["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED"].includes(order.status);
+  const bastEditable =
+    hasDelivery &&
+    !hasCompletedBast &&
+    ["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED"].includes(order.status);
 
   // Modal states
   const [showReturn, setShowReturn] = useState(false);
@@ -534,15 +563,36 @@ const bastEditable =
     0
   );
 
-  const TABS: { key: Tab; label: string }[] = [
+  const TABS: { key: Tab; label: string; badge?: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "items", label: "Items" },
     { key: "flow", label: "Flow" },
     { key: "compliance", label: "Compliance" },
-    { key: "procurement", label: "Procurement" },
-    { key: "shipment", label: "Shipment" },
-    { key: "delivery", label: "Delivery" },
-    { key: "bast", label: "BAST" },
+    {
+      key: "procurement",
+      label: "Procurement",
+      badge: procurements.length > 0 ? String(procurements.length) : undefined,
+    },
+    {
+      key: "shipment",
+      label: "Shipment",
+      badge: shipments.length > 0 ? String(shipments.length) : undefined,
+    },
+    {
+      key: "delivery",
+      label: "Delivery",
+      badge: deliveries.length > 0 ? String(deliveries.length) : undefined,
+    },
+    {
+      key: "bast",
+      label: "BAST",
+      badge: basts.length > 0 ? String(basts.length) : undefined,
+    },
+    {
+      key: "invoice",
+      label: "Invoice",
+      badge: invoices.length > 0 ? String(invoices.length) : undefined,
+    },
     { key: "activity", label: "Activity" },
   ];
 
@@ -760,13 +810,24 @@ const bastEditable =
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`h-11 px-4 text-sm border-b-2 -mb-px transition whitespace-nowrap ${
+                  className={`h-11 px-4 text-sm border-b-2 -mb-px transition whitespace-nowrap flex items-center gap-2 ${
                     tab === t.key
                       ? "border-[#0A84FF] text-[#0A84FF] font-medium"
                       : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"
                   }`}
                 >
-                  {t.label}
+                  <span>{t.label}</span>
+                  {t.badge && (
+                    <span
+                      className={`text-[10px] px-1.5 rounded-full ${
+                        tab === t.key
+                          ? "bg-[#0A84FF]/15 text-[#0A84FF]"
+                          : "bg-[#F2F2F4] text-[#6E6E73]"
+                      }`}
+                    >
+                      {t.badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -820,19 +881,19 @@ const bastEditable =
                 />
               )}
 
-{tab === "shipment" && (
-  <ShipmentTab
-    orderId={order.id}
-    orderStatus={order.status}
-    shipments={shipments}
-    transporters={transporters}
-    products={products}
-    orderItems={orderItemsRef}
-    coverage={coverage}
-    permissions={permissions}
-    canEdit={shipmentEditable}
-  />
-)}
+              {tab === "shipment" && (
+                <ShipmentTab
+                  orderId={order.id}
+                  orderStatus={order.status}
+                  shipments={shipments}
+                  transporters={transporters}
+                  products={products}
+                  orderItems={orderItemsRef}
+                  coverage={coverage}
+                  permissions={permissions}
+                  canEdit={shipmentEditable}
+                />
+              )}
 
               {tab === "delivery" && (
                 <DeliveryTab
@@ -849,6 +910,25 @@ const bastEditable =
                   basts={basts}
                   permissions={permissions}
                   canCreate={bastEditable}
+                />
+              )}
+
+              {tab === "invoice" && (
+                <InvoiceTab
+                  orderId={order.id}
+                  businessModel={order.business_model}
+                  orderStatus={order.status}
+                  orderCurrency={order.currency}
+                  orderItems={items.map((it) => ({
+                    product_id: it.product_id,
+                    product_name: it.products?.name ?? "—",
+                    uom: it.uom,
+                    qty: Number(it.qty),
+                    unit_price: Number(it.unit_price),
+                  }))}
+                  invoices={invoices}
+                  summary={invoiceSummary}
+                  permissions={permissions}
                 />
               )}
 
@@ -874,6 +954,54 @@ const bastEditable =
               currency={order.currency}
             />
           </div>
+
+          {/* INVOICING SUMMARY */}
+          {invoiceSummary.invoiceCount > 0 && (
+            <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+                Invoicing
+              </h2>
+              <div className="space-y-3 text-sm">
+                <SummaryRow
+                  label="Invoiced"
+                  value={fmtNum(
+                    invoiceSummary.totalInvoiced,
+                    invoiceSummary.currency
+                  )}
+                />
+                <SummaryRow
+                  label="Paid"
+                  value={fmtNum(
+                    invoiceSummary.totalPaid,
+                    invoiceSummary.currency
+                  )}
+                />
+                <SummaryRow
+                  label="Outstanding"
+                  value={fmtNum(
+                    invoiceSummary.outstanding,
+                    invoiceSummary.currency
+                  )}
+                />
+                {invoiceSummary.uninvoiced > 0.01 && (
+                  <SummaryRow
+                    label="Uninvoiced"
+                    value={fmtNum(
+                      invoiceSummary.uninvoiced,
+                      invoiceSummary.currency
+                    )}
+                  />
+                )}
+                {invoiceSummary.overdueCount > 0 && (
+                  <div className="pt-2">
+                    <Badge tone="red">
+                      {invoiceSummary.overdueCount} overdue
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* SUMMARY */}
           <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
@@ -988,6 +1116,7 @@ const bastEditable =
                 value={String(deliveries.length)}
               />
               <SummaryRow label="BASTs" value={String(basts.length)} />
+              <SummaryRow label="Invoices" value={String(invoices.length)} />
             </div>
           </div>
         </aside>
@@ -1134,6 +1263,12 @@ function Info({
       <div className="mt-1">{value || "—"}</div>
     </div>
   );
+}
+
+function fmtNum(n: number, currency: string) {
+  return `${currency} ${Number(n).toLocaleString("id-ID", {
+    maximumFractionDigits: 0,
+  })}`;
 }
 
 // ============================ BUSINESS MODEL CARD ============================

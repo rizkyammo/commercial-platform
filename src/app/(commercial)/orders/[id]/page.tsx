@@ -18,6 +18,10 @@ import {
 } from "@/features/flow/queries";
 import { getProcurementCoverage } from "@/features/flow/actions";
 import { getOrderComplianceStatus } from "@/features/compliance/queries";
+import {
+  listInvoicesByOrder,
+  getOrderInvoicingSummary,
+} from "@/features/invoicing/queries";
 import { createClient } from "@/lib/supabase/server";
 import { OrderDetail } from "./order-detail";
 
@@ -48,6 +52,8 @@ export default async function OrderDetailPage({
     shipments,
     deliveries,
     basts,
+    invoices,
+    invoiceSummary,
     vendors,
     transporters,
     compliance,
@@ -63,9 +69,14 @@ export default async function OrderDetailPage({
     listShipments(id),
     listDeliveries(id),
     listBasts(id),
+    listInvoicesByOrder(id),
+    getOrderInvoicingSummary(id),
     listVendorsSimple(),
     listTransportersSimple(),
-    getOrderComplianceStatus(id, (order as { sk_id?: string | null }).sk_id ?? null),
+    getOrderComplianceStatus(
+      id,
+      (order as { sk_id?: string | null }).sk_id ?? null
+    ),
     getProcurementCoverage(id),
   ]);
 
@@ -95,6 +106,8 @@ export default async function OrderDetailPage({
       shipments={shipments}
       deliveries={deliveries}
       basts={basts}
+      invoices={invoices as any}
+      invoiceSummary={invoiceSummary as any}
       vendors={vendors}
       transporters={transporters}
       orderItemsRef={orderItemsRef}

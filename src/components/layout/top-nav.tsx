@@ -14,6 +14,7 @@ const NAV = [
   { label: "Orders", href: "/orders" },
   { label: "Flow", href: "/flow" },
   { label: "Compliance", href: "/compliance" },
+  { label: "Invoicing", href: "/invoicing" },
   { label: "Spatial", href: "/spatial" },
   { label: "Analytics", href: "/analytics" },
   { label: "Reports", href: "/reports" },
