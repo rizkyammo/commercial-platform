@@ -31,7 +31,13 @@ import {
   requestCancellation,
   reviewApprovalRequest,
 } from "@/features/orders/actions";
+import { issueOrder } from "@/features/compliance/actions";
 import type { OrderItemInput } from "@/lib/validation/orders";
+import {
+  BUSINESS_MODELS,
+  getBusinessModelInfo,
+} from "@/lib/constants/business-models";
+import type { ProcurementCoverage } from "@/features/flow/types";
 
 import { ProcurementTab } from "./_flow/procurement-tab";
 import { ShipmentTab } from "./_flow/shipment-tab";
@@ -51,12 +57,17 @@ type Order = {
   exchange_rate: number;
   selling_value: number;
   margin: number;
+  total_direct_cost?: number;
+  tax_rate?: number;
   current_stage: string;
   completion_pct: number;
   remarks: string | null;
   customer_id: string;
   site_id: string;
   contract_id: string;
+  sk_id?: string | null;
+  issued_at?: string | null;
+  issued_by?: string | null;
   created_at: string;
   submitted_at: string | null;
   approved_at: string | null;
@@ -64,19 +75,16 @@ type Order = {
   return_reason: string | null;
   cancelled_at: string | null;
   cancel_reason: string | null;
-  // amendment metadata
   amendment_count?: number;
   last_amendment_from_status?: string | null;
   last_amendment_at?: string | null;
   last_amendment_by?: string | null;
-  // stage statuses
   po_status: string;
   compliance_status: string;
   procurement_status: string;
   shipment_status: string;
   delivery_status: string;
   bast_status: string;
-  // enriched
   customers?: { id: string; code: string; name: string } | null;
   sites?: { id: string; code: string; name: string } | null;
   contracts?: { id: string; code: string; name: string; currency: string } | null;
@@ -119,7 +127,7 @@ type ProductOption = { id: string; code: string; name: string; uom: string };
 type SiteOption = { id: string; code: string; name: string };
 type ContractOption = { id: string; code: string; name: string; currency: string };
 type VendorOption = { id: string; code: string; name: string };
-type TransporterOption = { id: string; code: string; name: string; plate_number: string | null };
+type TransporterOption = { id: string; code: string; name: string };
 
 type ProcurementRow = {
   id: string;
@@ -142,10 +150,10 @@ type ShipmentRow = {
   shipment_number: string;
   shipment_date: string | null;
   transporter_id: string | null;
-  vehicle_ref: string | null;
   origin: string | null;
   destination: string | null;
   delivery_ref: string | null;
+  transport_cost: number;
   status: string;
   remarks: string | null;
   transporters?: { name: string } | null;
@@ -159,6 +167,7 @@ type DeliveryRow = {
   delivery_note: string | null;
   location: string | null;
   status: string;
+  shipment_id?: string;
 };
 
 type BastRow = {
@@ -167,15 +176,37 @@ type BastRow = {
   bast_date: string | null;
   receiver_name: string | null;
   signed_by: string | null;
-  signed_document_ref: string | null;
+  signed_document_path: string | null;
   remarks: string | null;
   status: string;
+};
+
+type ComplianceData = {
+  items: {
+    product_id: string;
+    product_name: string;
+    product_code: string;
+    uom: string;
+    requested: number;
+    authorized: boolean;
+    available: number;
+    sufficient: boolean;
+  }[];
+  sk: {
+    id: string;
+    sk_number: string;
+    status: string;
+    expiry_date: string | null;
+    effective_date: string | null;
+    issuing_authority?: string;
+  } | null;
 };
 
 type Tab =
   | "overview"
   | "items"
   | "flow"
+  | "compliance"
   | "procurement"
   | "shipment"
   | "delivery"
@@ -213,6 +244,8 @@ export function OrderDetail({
   vendors,
   transporters,
   orderItemsRef,
+  compliance,
+  coverage,
   currentUserId,
   permissions,
 }: {
@@ -230,6 +263,8 @@ export function OrderDetail({
   vendors: VendorOption[];
   transporters: TransporterOption[];
   orderItemsRef: { product_id: string; qty: number; uom: string }[];
+  compliance: ComplianceData | undefined;
+  coverage: ProcurementCoverage;
   currentUserId: string;
   permissions: string[];
 }) {
@@ -251,22 +286,35 @@ export function OrderDetail({
     canAmendOrder(order.status) && permissions.includes("ORDER_AMEND_REQUEST");
   const canCancel =
     canCancelOrder(order.status) && permissions.includes("ORDER_CANCEL_REQUEST");
+  const canIssue =
+    order.status === "APPROVED" && permissions.includes("ORDER_APPROVE");
   const canReviewApprovals =
     permissions.includes("ORDER_AMEND_APPROVE") ||
     permissions.includes("ORDER_CANCEL_APPROVE");
 
-  const flowEditable = [
-    "APPROVED",
-    "ISSUED",
-    "IN_PROGRESS",
-    "PARTIALLY_FULFILLED",
-  ].includes(order.status);
-  const bastEditable = [
-    "IN_PROGRESS",
-    "PARTIALLY_FULFILLED",
-    "FULFILLED",
-    "CLOSED",
-  ].includes(order.status);
+  // Sequential stage guards
+const procurementEditable = [
+  "ISSUED",
+  "IN_PROGRESS",
+  "PARTIALLY_FULFILLED",
+].includes(order.status);
+
+// Shipment boleh dibuat kalau:
+// - order masih dalam siklus aktif (belum FULFILLED/CLOSED)
+// - DAN coverage sudah 100% verified
+const shipmentEditable = procurementEditable && coverage.all_verified;
+
+const hasDelivery = deliveries.length > 0;
+
+// BAST boleh dibuat kalau:
+// - ada delivery
+// - order aktif (belum CLOSED)
+// - belum ada BAST yang completed
+const hasCompletedBast = basts.some((b) => b.status === "COMPLETED");
+const bastEditable =
+  hasDelivery &&
+  !hasCompletedBast &&
+  ["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED"].includes(order.status);
 
   // Modal states
   const [showReturn, setShowReturn] = useState(false);
@@ -402,6 +450,15 @@ export function OrderDetail({
     });
   }
 
+  function doIssue() {
+    setError(null);
+    startTransition(async () => {
+      const r = await issueOrder(order.id);
+      if (r.error) setError(r.error);
+      else router.refresh();
+    });
+  }
+
   function doReturn() {
     setError(null);
     startTransition(async () => {
@@ -467,10 +524,21 @@ export function OrderDetail({
 
   const display = getDisplayStatus(order);
 
+  // Margin breakdown totals
+  const totalMaterialCost = procurements.reduce(
+    (a, p) => a + Number(p.material_cost ?? 0),
+    0
+  );
+  const totalTransportCost = shipments.reduce(
+    (a, s) => a + Number(s.transport_cost ?? 0),
+    0
+  );
+
   const TABS: { key: Tab; label: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "items", label: "Items" },
     { key: "flow", label: "Flow" },
+    { key: "compliance", label: "Compliance" },
     { key: "procurement", label: "Procurement" },
     { key: "shipment", label: "Shipment" },
     { key: "delivery", label: "Delivery" },
@@ -500,7 +568,8 @@ export function OrderDetail({
             </span>
           </div>
           <p className="mt-1 text-sm text-[#6E6E73]">
-            {order.customers?.name} · {order.sites?.name}
+            {order.customers?.name} · {order.sites?.name} ·{" "}
+            <span className="text-[#0A84FF]">{order.business_model}</span>
           </p>
         </div>
 
@@ -554,6 +623,11 @@ export function OrderDetail({
           {canApprove && (
             <Button onClick={doApprove} disabled={pending}>
               {pending ? "Approving..." : "Approve"}
+            </Button>
+          )}
+          {canIssue && (
+            <Button onClick={doIssue} disabled={pending}>
+              {pending ? "Issuing..." : "Issue Order"}
             </Button>
           )}
           {canAmend && (
@@ -613,6 +687,18 @@ export function OrderDetail({
         </div>
       )}
 
+      {order.status === "ISSUED" && order.sk_id && (
+        <div className="mb-6 text-sm bg-[#34C759]/10 border border-[#34C759]/30 text-[#1B8A3B] rounded-lg px-4 py-3">
+          <div className="font-medium">Order sudah di-issue</div>
+          <div className="mt-1">
+            SK aktif terkait: {compliance?.sk?.sk_number ?? order.sk_id}
+            {order.issued_at
+              ? ` · Issued ${new Date(order.issued_at).toLocaleString("id-ID")}`
+              : ""}
+          </div>
+        </div>
+      )}
+
       {/* PENDING APPROVALS */}
       {pendingApprovals.length > 0 && (
         <div className="mb-6 bg-white border border-[#E5E5EA] rounded-xl p-4">
@@ -629,8 +715,7 @@ export function OrderDetail({
                   <span className="font-medium">{a.type}</span>
                   <span className="text-[#6E6E73]"> · {a.reason}</span>
                   <div className="text-xs text-[#8E8E93] mt-0.5">
-                    Diminta{" "}
-                    {new Date(a.requested_at).toLocaleString("id-ID")}
+                    Diminta {new Date(a.requested_at).toLocaleString("id-ID")}
                   </div>
                 </div>
                 {canReviewApprovals ? (
@@ -713,28 +798,41 @@ export function OrderDetail({
 
               {tab === "flow" && <FlowTab order={order} />}
 
+              {tab === "compliance" && (
+                <ComplianceTab order={order} compliance={compliance} />
+              )}
+
               {tab === "procurement" && (
                 <ProcurementTab
                   orderId={order.id}
                   procurements={procurements}
                   vendors={vendors}
                   products={products}
+                  orderItems={items.map((it) => ({
+                    product_id: it.product_id,
+                    product_name: it.products?.name ?? "—",
+                    uom: it.uom,
+                    qty: Number(it.qty),
+                  }))}
+                  coverage={coverage}
                   permissions={permissions}
-                  canEdit={flowEditable}
+                  canEdit={procurementEditable}
                 />
               )}
 
-              {tab === "shipment" && (
-                <ShipmentTab
-                  orderId={order.id}
-                  shipments={shipments}
-                  transporters={transporters}
-                  products={products}
-                  orderItems={orderItemsRef}
-                  permissions={permissions}
-                  canEdit={flowEditable}
-                />
-              )}
+{tab === "shipment" && (
+  <ShipmentTab
+    orderId={order.id}
+    orderStatus={order.status}
+    shipments={shipments}
+    transporters={transporters}
+    products={products}
+    orderItems={orderItemsRef}
+    coverage={coverage}
+    permissions={permissions}
+    canEdit={shipmentEditable}
+  />
+)}
 
               {tab === "delivery" && (
                 <DeliveryTab
@@ -760,6 +858,24 @@ export function OrderDetail({
         </div>
 
         <aside className="space-y-6">
+          {/* BUSINESS MODEL CARD */}
+          <BusinessModelCard model={order.business_model} />
+
+          {/* MARGIN BREAKDOWN */}
+          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+              Margin Breakdown
+            </h2>
+            <MarginBreakdown
+              sellingValue={Number(order.selling_value)}
+              materialCost={totalMaterialCost}
+              transportCost={totalTransportCost}
+              taxRate={Number(order.tax_rate ?? 11)}
+              currency={order.currency}
+            />
+          </div>
+
+          {/* SUMMARY */}
           <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
             <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
               Summary
@@ -771,7 +887,6 @@ export function OrderDetail({
                   order.selling_value
                 ).toLocaleString("id-ID")}`}
               />
-              <SummaryRow label="Margin" value={`${marginPct.toFixed(1)}%`} />
               <SummaryRow
                 label="Business Model"
                 value={order.business_model}
@@ -790,6 +905,36 @@ export function OrderDetail({
             </div>
           </div>
 
+          {/* COMPLIANCE */}
+          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+              Compliance
+            </h2>
+            {compliance?.sk ? (
+              <div className="space-y-3 text-sm">
+                <SummaryRow
+                  label="SK Number"
+                  value={compliance.sk.sk_number}
+                />
+                <SummaryRow label="Status" value={compliance.sk.status} />
+                <SummaryRow
+                  label="Expiry"
+                  value={compliance.sk.expiry_date ?? "—"}
+                />
+                <div className="pt-2">
+                  {compliance.items.every((i) => i.sufficient) ? (
+                    <Badge tone="green">All materials sufficient</Badge>
+                  ) : (
+                    <Badge tone="red">Quota issue</Badge>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-[#6E6E73]">No active SK</div>
+            )}
+          </div>
+
+          {/* KEY DATES */}
           <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
             <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
               Key Dates
@@ -816,9 +961,18 @@ export function OrderDetail({
                     : "—"
                 }
               />
+              <SummaryRow
+                label="Issued"
+                value={
+                  order.issued_at
+                    ? new Date(order.issued_at).toLocaleDateString("id-ID")
+                    : "—"
+                }
+              />
             </div>
           </div>
 
+          {/* FLOW COUNTERS */}
           <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
             <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
               Flow Counters
@@ -958,9 +1112,9 @@ function getDisplayStatus(order: {
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-[#6E6E73]">{label}</span>
-      <span className="font-medium text-right">{value}</span>
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[#6E6E73] shrink-0">{label}</span>
+      <span className="font-medium text-right truncate">{value}</span>
     </div>
   );
 }
@@ -978,6 +1132,147 @@ function Info({
         {label}
       </div>
       <div className="mt-1">{value || "—"}</div>
+    </div>
+  );
+}
+
+// ============================ BUSINESS MODEL CARD ============================
+
+function BusinessModelCard({ model }: { model: string }) {
+  const info = getBusinessModelInfo(model);
+  if (!info) {
+    return (
+      <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-2">
+          Business Model
+        </h2>
+        <div className="text-sm">{model || "—"}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+        Business Model
+      </h2>
+      <div className="text-base font-semibold text-[#0A84FF]">
+        {info.label}
+      </div>
+      <p className="mt-2 text-xs text-[#6E6E73] leading-relaxed">
+        {info.description}
+      </p>
+      <div className="mt-3 pt-3 border-t border-[#E5E5EA]">
+        <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide">
+          Cocok untuk
+        </div>
+        <div className="mt-0.5 text-xs text-[#1D1D1F]">{info.fit}</div>
+      </div>
+    </div>
+  );
+}
+
+// ============================ MARGIN BREAKDOWN ============================
+
+function MarginBreakdown({
+  sellingValue,
+  materialCost,
+  transportCost,
+  taxRate,
+  currency,
+}: {
+  sellingValue: number;
+  materialCost: number;
+  transportCost: number;
+  taxRate: number;
+  currency: string;
+}) {
+  const totalCost = materialCost + transportCost;
+  const marginBefore = sellingValue - totalCost;
+  const marginPctBefore =
+    sellingValue > 0 ? (marginBefore / sellingValue) * 100 : 0;
+  const taxAmount = (sellingValue * taxRate) / 100;
+  const marginAfter = marginBefore - taxAmount;
+  const marginPctAfter =
+    sellingValue > 0 ? (marginAfter / sellingValue) * 100 : 0;
+
+  const fmt = (n: number) =>
+    `${currency} ${n.toLocaleString("id-ID", { maximumFractionDigits: 2 })}`;
+
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">Selling Value (DPP)</span>
+        <span className="font-mono text-xs">{fmt(sellingValue)}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">Material Cost</span>
+        <span className="font-mono text-xs text-[#FF3B30]">
+          − {fmt(materialCost)}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">Transport Cost</span>
+        <span className="font-mono text-xs text-[#FF3B30]">
+          − {fmt(transportCost)}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+        <span className="text-[#6E6E73]">Total Direct Cost</span>
+        <span className="font-mono text-xs">{fmt(totalCost)}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+        <span className="font-medium">Margin (Before Tax)</span>
+        <span
+          className={`font-mono text-xs font-medium ${
+            marginBefore >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+          }`}
+        >
+          {fmt(marginBefore)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">Margin %</span>
+        <span
+          className={`text-xs font-medium ${
+            marginPctBefore >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+          }`}
+        >
+          {marginPctBefore.toFixed(2)}%
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <span className="text-[#6E6E73]">Tax ({taxRate}%)</span>
+        <span className="font-mono text-xs text-[#FF3B30]">
+          − {fmt(taxAmount)}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+        <span className="font-medium">Margin (After Tax)</span>
+        <span
+          className={`font-mono text-xs font-medium ${
+            marginAfter >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+          }`}
+        >
+          {fmt(marginAfter)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">Margin %</span>
+        <span
+          className={`text-xs font-medium ${
+            marginPctAfter >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+          }`}
+        >
+          {marginPctAfter.toFixed(2)}%
+        </span>
+      </div>
     </div>
   );
 }
@@ -1001,6 +1296,8 @@ function OverviewTab({
   contracts: ContractOption[];
   marginPct: number;
 }) {
+  const draftModelInfo = getBusinessModelInfo(draft.business_model);
+
   if (!editMode) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 text-sm">
@@ -1057,19 +1354,35 @@ function OverviewTab({
           ))}
         </Select>
       </FormField>
-      <FormField label="Business Model">
-        <Select
-          value={draft.business_model}
-          onChange={(e) =>
-            setDraft({ ...draft, business_model: e.target.value })
-          }
-        >
-          <option value="Direct Sale">Direct Sale</option>
-          <option value="Consignment">Consignment</option>
-          <option value="Call-Off">Call-Off</option>
-          <option value="Full Payment">Full Payment</option>
-        </Select>
-      </FormField>
+
+      <div className="md:col-span-2">
+        <FormField label="Business Model" required>
+          <Select
+            value={draft.business_model}
+            onChange={(e) =>
+              setDraft({ ...draft, business_model: e.target.value })
+            }
+          >
+            {BUSINESS_MODELS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+        {draftModelInfo && (
+          <div className="mt-2 text-xs text-[#6E6E73] bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg px-3 py-2 leading-relaxed">
+            <div className="font-medium text-[#1D1D1F] mb-0.5">
+              {draftModelInfo.label}
+            </div>
+            <div>{draftModelInfo.description}</div>
+            <div className="mt-1 text-[10px] text-[#8E8E93]">
+              Cocok untuk: {draftModelInfo.fit}
+            </div>
+          </div>
+        )}
+      </div>
+
       <FormField label="PO Number">
         <Input
           value={draft.po_number}
@@ -1230,9 +1543,7 @@ function ItemsTab({
                 <TD>
                   <Input
                     value={it.uom}
-                    onChange={(e) =>
-                      onUpdate(it._key, { uom: e.target.value })
-                    }
+                    onChange={(e) => onUpdate(it._key, { uom: e.target.value })}
                     className="w-20"
                   />
                 </TD>
@@ -1272,13 +1583,22 @@ function ItemsTab({
 }
 
 function FlowTab({ order }: { order: Order }) {
+  // Derive compliance from order status kalau belum ter-set (fallback)
+  const complianceStatus =
+    order.compliance_status === "NOT_STARTED" &&
+    [
+      "ISSUED",
+      "IN_PROGRESS",
+      "PARTIALLY_FULFILLED",
+      "FULFILLED",
+      "CLOSED",
+    ].includes(order.status)
+      ? "COMPLETED"
+      : order.compliance_status;
+
   const stages: { key: string; label: string; status: string }[] = [
     { key: "PO", label: "PO", status: order.po_status },
-    {
-      key: "COMPLIANCE",
-      label: "Compliance",
-      status: order.compliance_status,
-    },
+    { key: "COMPLIANCE", label: "Compliance", status: complianceStatus },
     {
       key: "PROCUREMENT",
       label: "Procurement",
@@ -1308,6 +1628,132 @@ function FlowTab({ order }: { order: Order }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+function ComplianceTab({
+  order,
+  compliance,
+}: {
+  order: Order;
+  compliance: ComplianceData | undefined;
+}) {
+  if (!compliance || !compliance.sk) {
+    return (
+      <div className="text-sm text-[#6E6E73] text-center py-10">
+        Belum ada SK Kemhan aktif. Hubungi Compliance untuk membuat SK terlebih
+        dahulu.
+      </div>
+    );
+  }
+
+  const allSufficient = compliance.items.every((i) => i.sufficient);
+  const anyUnauthorized = compliance.items.some((i) => !i.authorized);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg p-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="text-lg font-semibold">{compliance.sk.sk_number}</div>
+          <Badge
+            tone={compliance.sk.status === "ACTIVE" ? "green" : "orange"}
+          >
+            {compliance.sk.status}
+          </Badge>
+          {order.compliance_status === "COMPLETED" && (
+            <Badge tone="green">Order Issued</Badge>
+          )}
+          {order.sk_id && <Badge tone="blue">Linked to this order</Badge>}
+        </div>
+        {compliance.sk.issuing_authority && (
+          <div className="mt-1 text-sm text-[#6E6E73]">
+            {compliance.sk.issuing_authority}
+          </div>
+        )}
+        {compliance.sk.expiry_date && (
+          <div className="mt-1 text-xs text-[#8E8E93]">
+            Expires {compliance.sk.expiry_date}
+          </div>
+        )}
+      </div>
+
+      <Table>
+        <THead>
+          <TR>
+            <TH>Material</TH>
+            <TH className="text-right">Requested</TH>
+            <TH className="text-right">Available</TH>
+            <TH>Status</TH>
+          </TR>
+        </THead>
+        <TBody>
+          {compliance.items.map((it) => (
+            <TR key={it.product_id}>
+              <TD className="font-medium">{it.product_name}</TD>
+              <TD className="text-right font-mono text-xs">
+                {it.requested.toLocaleString("id-ID")} {it.uom}
+              </TD>
+              <TD className="text-right font-mono text-xs">
+                {it.authorized
+                  ? `${it.available.toLocaleString("id-ID")} ${it.uom}`
+                  : "—"}
+              </TD>
+              <TD>
+                {!it.authorized && <Badge tone="red">Not authorized</Badge>}
+                {it.authorized && it.sufficient && (
+                  <Badge tone="green">Sufficient</Badge>
+                )}
+                {it.authorized && !it.sufficient && (
+                  <Badge tone="red">Insufficient</Badge>
+                )}
+              </TD>
+            </TR>
+          ))}
+        </TBody>
+      </Table>
+
+      {order.status === "APPROVED" && (
+        <div
+          className={`text-sm rounded-lg px-4 py-3 ${
+            allSufficient && !anyUnauthorized
+              ? "bg-[#34C759]/10 border border-[#34C759]/30 text-[#1B8A3B]"
+              : "bg-[#FF3B30]/5 border border-[#FF3B30]/30 text-[#B71C1C]"
+          }`}
+        >
+          {allSufficient && !anyUnauthorized ? (
+            <>
+              <div className="font-medium">Semua material sufficient.</div>
+              <div className="mt-1">
+                Klik <span className="font-medium">Issue Order</span> di header
+                untuk mengunci quota dan mengubah status menjadi ISSUED.
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-medium">Compliance check gagal.</div>
+              <div className="mt-1">
+                {anyUnauthorized
+                  ? "Ada material yang tidak tercakup dalam SK aktif."
+                  : "Quota tidak mencukupi untuk salah satu material."}{" "}
+                Hubungi Compliance sebelum issue order.
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {order.status === "ISSUED" && (
+        <div className="text-sm bg-[#EAF2FB] border border-[#0A84FF]/30 text-[#0A84FF] rounded-lg px-4 py-3">
+          <div className="font-medium">
+            Quota sudah di-reserve untuk order ini.
+          </div>
+          <div className="mt-1 text-xs">
+            Quota akan otomatis di-realize saat Shipment di-confirm, dan
+            di-release saat order di-cancel.
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

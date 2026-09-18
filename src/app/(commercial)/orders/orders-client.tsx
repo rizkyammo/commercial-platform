@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { getOrderDisplayStatus } from "@/features/orders/states";
 
+// ============================ TYPES ============================
+
 type OrderRow = {
   id: string;
   order_number: string;
@@ -29,15 +31,73 @@ type OrderRow = {
 
 type Counters = { total: number; byStatus: Record<string, number> };
 
-const TABS: { key: string; label: string; statusKey?: string }[] = [
+type TabDef = {
+  key: string;
+  label: string;
+  /** Status DB value (untuk filter), atau undefined untuk "all" */
+  statusKey?: string;
+  /** Tone warna untuk badge (opsional) */
+  tone?: "neutral" | "blue" | "green" | "yellow" | "orange" | "red" | "grey";
+};
+
+// ============================ TABS ============================
+
+const TABS: TabDef[] = [
   { key: "all", label: "All" },
-  { key: "DRAFT", label: "Draft", statusKey: "DRAFT" },
-  { key: "SUBMITTED", label: "Submitted", statusKey: "SUBMITTED" },
-  { key: "UNDER_REVIEW", label: "Review", statusKey: "UNDER_REVIEW" },
-  { key: "RETURNED", label: "Returned", statusKey: "RETURNED" },
-  { key: "APPROVED", label: "Approved", statusKey: "APPROVED" },
-  { key: "CANCELLED", label: "Cancelled", statusKey: "CANCELLED" },
+  { key: "DRAFT", label: "Draft", statusKey: "DRAFT", tone: "grey" },
+  {
+    key: "SUBMITTED",
+    label: "Submitted",
+    statusKey: "SUBMITTED",
+    tone: "blue",
+  },
+  {
+    key: "UNDER_REVIEW",
+    label: "Review",
+    statusKey: "UNDER_REVIEW",
+    tone: "blue",
+  },
+  {
+    key: "RETURNED",
+    label: "Returned",
+    statusKey: "RETURNED",
+    tone: "orange",
+  },
+  {
+    key: "APPROVED",
+    label: "Approved",
+    statusKey: "APPROVED",
+    tone: "blue",
+  },
+  { key: "ISSUED", label: "Issued", statusKey: "ISSUED", tone: "blue" },
+  {
+    key: "IN_PROGRESS",
+    label: "In Progress",
+    statusKey: "IN_PROGRESS",
+    tone: "blue",
+  },
+  {
+    key: "PARTIALLY_FULFILLED",
+    label: "Partial",
+    statusKey: "PARTIALLY_FULFILLED",
+    tone: "blue",
+  },
+  {
+    key: "FULFILLED",
+    label: "Fulfilled",
+    statusKey: "FULFILLED",
+    tone: "green",
+  },
+  { key: "CLOSED", label: "Closed", statusKey: "CLOSED", tone: "green" },
+  {
+    key: "CANCELLED",
+    label: "Cancelled",
+    statusKey: "CANCELLED",
+    tone: "red",
+  },
 ];
+
+// ============================ MAIN ============================
 
 export function OrdersClient({
   rows,
@@ -63,6 +123,8 @@ export function OrdersClient({
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
+
+  const activeTab = status || "all";
 
   function buildHref(p: number) {
     const sp = new URLSearchParams(search.toString());
@@ -101,37 +163,45 @@ export function OrdersClient({
     return counters.byStatus[key] ?? 0;
   }
 
-  const hasActiveFilter = Boolean(q || customerId || (status && status !== "all"));
+  const hasActiveFilter = Boolean(
+    q || customerId || (status && status !== "all")
+  );
 
   return (
     <div className="bg-white border border-[#E5E5EA] rounded-xl">
       <div className="p-4 border-b border-[#E5E5EA] flex flex-col gap-4">
-        <div className="flex flex-wrap gap-1">
-          {TABS.map((t) => {
-            const active = (status || "all") === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => selectTab(t.key)}
-                className={`h-9 px-3 rounded-lg text-sm transition flex items-center gap-2 ${
-                  active
-                    ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
-                    : "text-[#6E6E73] hover:bg-[#F2F2F4]"
-                }`}
-              >
-                {t.label}
-                <span
-                  className={`text-xs px-1.5 rounded-full ${
-                    active ? "bg-[#0A84FF]/15 text-[#0A84FF]" : "bg-[#F2F2F4]"
+        {/* TAB STRIP — horizontal scroll */}
+        <div className="-mx-1 overflow-x-auto pb-1">
+          <div className="flex gap-1 min-w-max px-1">
+            {TABS.map((t) => {
+              const active = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => selectTab(t.key)}
+                  className={`h-9 px-3 rounded-lg text-sm transition flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                    active
+                      ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
+                      : "text-[#6E6E73] hover:bg-[#F2F2F4]"
                   }`}
                 >
-                  {countForTab(t.key)}
-                </span>
-              </button>
-            );
-          })}
+                  <span>{t.label}</span>
+                  <span
+                    className={`text-xs px-1.5 rounded-full min-w-[24px] text-center ${
+                      active
+                        ? "bg-[#0A84FF]/15 text-[#0A84FF]"
+                        : "bg-[#F2F2F4]"
+                    }`}
+                  >
+                    {countForTab(t.key)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {/* FILTERS */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <form onSubmit={submitSearch} className="flex flex-1 gap-2 flex-wrap">
             <Input
@@ -167,6 +237,7 @@ export function OrdersClient({
         </div>
       </div>
 
+      {/* TABLE */}
       <Table>
         <THead>
           <TR>

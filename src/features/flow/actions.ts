@@ -11,9 +11,118 @@ import {
   bastSchema,
 } from "@/lib/validation/flow";
 
-// =========================================================
+// ============================================================
+// COVERAGE HELPER
+// Menghitung coverage order items terhadap seluruh procurement
+// ============================================================
+async function buildProcurementCoverage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orderId: string
+) {
+  // 1) Order items
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("product_id, qty, uom, products(name, code, uom)")
+    .eq("order_id", orderId);
+
+  // 2) Procurements for order (semua status)
+  const { data: procs } = await supabase
+    .from("procurements")
+    .select("id, procurement_number, status, vendors(name)")
+    .eq("order_id", orderId);
+
+  const procMap = new Map(
+    (procs ?? []).map((p) => [
+      p.id,
+      p as {
+        id: string;
+        procurement_number: string;
+        status: string;
+        vendors?: { name?: string } | null;
+      },
+    ])
+  );
+  const procIds = (procs ?? []).map((p) => p.id);
+
+  // 3) Procurement items
+  let procItems: { procurement_id: string; product_id: string; qty: number }[] = [];
+  if (procIds.length > 0) {
+    const { data } = await supabase
+      .from("procurement_items")
+      .select("procurement_id, product_id, qty")
+      .in("procurement_id", procIds);
+    procItems = data ?? [];
+  }
+
+  // 4) Build map: product_id -> contributions[]
+  const byProduct = new Map<
+    string,
+    Array<{
+      procurement_id: string;
+      procurement_number: string;
+      vendor_name: string;
+      status: string;
+      qty: number;
+    }>
+  >();
+
+  for (const pi of procItems) {
+    const proc = procMap.get(pi.procurement_id);
+    if (!proc) continue;
+    const arr = byProduct.get(pi.product_id) ?? [];
+    arr.push({
+      procurement_id: proc.id,
+      procurement_number: proc.procurement_number,
+      vendor_name: proc.vendors?.name ?? "—",
+      status: proc.status,
+      qty: Number(pi.qty),
+    });
+    byProduct.set(pi.product_id, arr);
+  }
+
+  // 5) Build coverage items
+  const items = (orderItems ?? []).map((oi) => {
+    const ordered = Number(oi.qty);
+    const contributions = byProduct.get(oi.product_id) ?? [];
+    const procured_all = contributions.reduce((a, c) => a + c.qty, 0);
+    const procured_verified = contributions
+      .filter((c) => c.status === "VERIFIED")
+      .reduce((a, c) => a + c.qty, 0);
+    const prod = oi.products as
+      | { name?: string; code?: string; uom?: string }
+      | null;
+
+    return {
+      product_id: oi.product_id,
+      product_name: prod?.name ?? "—",
+      product_code: prod?.code ?? "—",
+      uom: (oi.uom ?? prod?.uom) ?? "MT",
+      ordered,
+      procured_all,
+      procured_verified,
+      fully_procured: procured_all >= ordered,
+      fully_verified: procured_verified >= ordered,
+      contributions,
+    };
+  });
+
+  return {
+    items,
+    all_covered: items.length > 0 && items.every((i) => i.fully_procured),
+    all_verified: items.length > 0 && items.every((i) => i.fully_verified),
+  };
+}
+
+export async function getProcurementCoverage(orderId: string) {
+  const supabase = await createClient();
+  return buildProcurementCoverage(supabase, orderId);
+}
+
+// ============================================================
 // PROCUREMENT
-// =========================================================
+// ============================================================
+
+// ---------- CREATE ----------
 export async function createProcurement(orderId: string, input: unknown) {
   const parsed = procurementSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -21,6 +130,23 @@ export async function createProcurement(orderId: string, input: unknown) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
+
+  // Guard: order harus ISSUED atau lebih
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) return { error: "Order tidak ditemukan." };
+  if (
+    !["ISSUED", "IN_PROGRESS", "PARTIALLY_FULFILLED"].includes(order.status)
+  ) {
+    return {
+      error:
+        "Procurement hanya dapat dibuat setelah order di-issue (compliance completed).",
+    };
+  }
 
   const d = parsed.data;
   const { data: proc, error } = await supabase
@@ -45,7 +171,8 @@ export async function createProcurement(orderId: string, input: unknown) {
 
   if (d.items.length > 0) {
     const rows = d.items.map((it, idx) => {
-      const lineValue = it.qty * it.unit_price * (it.currency === "IDR" ? 1 : it.exchange_rate);
+      const lineValue =
+        it.qty * it.unit_price * (it.currency === "IDR" ? 1 : it.exchange_rate);
       return {
         procurement_id: proc.id,
         product_id: it.product_id,
@@ -69,13 +196,17 @@ export async function createProcurement(orderId: string, input: unknown) {
     module: "Procurement",
     resourceType: "procurement",
     resourceId: proc.id,
-    newValue: { procurement_number: proc.procurement_number, order_id: orderId },
+    newValue: {
+      procurement_number: proc.procurement_number,
+      order_id: orderId,
+    },
   });
 
   revalidatePath(`/orders/${orderId}`);
   return { data: proc };
 }
 
+// ---------- UPDATE ----------
 export async function updateProcurement(procId: string, input: unknown) {
   const parsed = procurementSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -84,9 +215,14 @@ export async function updateProcurement(procId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("procurements").select("status, order_id").eq("id", procId).single();
+  const { data: existing } = await supabase
+    .from("procurements")
+    .select("status, order_id")
+    .eq("id", procId)
+    .single();
   if (!existing) return { error: "Procurement tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya procurement DRAFT dapat diedit." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya procurement DRAFT dapat diedit." };
 
   const d = parsed.data;
   const { error: updErr } = await supabase
@@ -105,10 +241,15 @@ export async function updateProcurement(procId: string, input: unknown) {
 
   if (updErr) return { error: updErr.message };
 
-  await supabase.from("procurement_items").delete().eq("procurement_id", procId);
+  await supabase
+    .from("procurement_items")
+    .delete()
+    .eq("procurement_id", procId);
+
   if (d.items.length > 0) {
     const rows = d.items.map((it, idx) => {
-      const lineValue = it.qty * it.unit_price * (it.currency === "IDR" ? 1 : it.exchange_rate);
+      const lineValue =
+        it.qty * it.unit_price * (it.currency === "IDR" ? 1 : it.exchange_rate);
       return {
         procurement_id: procId,
         product_id: it.product_id,
@@ -133,26 +274,34 @@ export async function updateProcurement(procId: string, input: unknown) {
     resourceType: "procurement",
     resourceId: procId,
   });
-
   revalidatePath(`/orders/${existing.order_id}`);
   return { ok: true };
 }
 
+// ---------- SUBMIT (boleh per-vendor, tanpa coverage check) ----------
 export async function submitProcurement(procId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("procurements").select("status, order_id, procurement_number").eq("id", procId).single();
+  const { data: existing } = await supabase
+    .from("procurements")
+    .select("status, order_id, procurement_number")
+    .eq("id", procId)
+    .single();
   if (!existing) return { error: "Procurement tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya draft dapat disubmit." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya draft dapat disubmit." };
 
-  const { error } = await supabase.from("procurements").update({
-    status: "SUBMITTED",
-    submitted_at: new Date().toISOString(),
-    submitted_by: user.id,
-    updated_by: user.id,
-  }).eq("id", procId);
+  const { error } = await supabase
+    .from("procurements")
+    .update({
+      status: "SUBMITTED",
+      submitted_at: new Date().toISOString(),
+      submitted_by: user.id,
+      updated_by: user.id,
+    })
+    .eq("id", procId);
 
   if (error) return { error: error.message };
 
@@ -174,22 +323,31 @@ export async function submitProcurement(procId: string) {
   return { ok: true };
 }
 
+// ---------- VERIFY ----------
 export async function verifyProcurement(procId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("procurements").select("status, order_id, procurement_number, created_by").eq("id", procId).single();
+  const { data: existing } = await supabase
+    .from("procurements")
+    .select("status, order_id, procurement_number, created_by")
+    .eq("id", procId)
+    .single();
   if (!existing) return { error: "Procurement tidak ditemukan." };
-  if (existing.status !== "SUBMITTED") return { error: "Hanya SUBMITTED yang dapat diverifikasi." };
+  if (existing.status !== "SUBMITTED")
+    return { error: "Hanya SUBMITTED yang dapat diverifikasi." };
 
-  const { error } = await supabase.from("procurements").update({
-    status: "VERIFIED",
-    verified_at: new Date().toISOString(),
-    verified_by: user.id,
-    completed_at: new Date().toISOString(),
-    updated_by: user.id,
-  }).eq("id", procId);
+  const { error } = await supabase
+    .from("procurements")
+    .update({
+      status: "VERIFIED",
+      verified_at: new Date().toISOString(),
+      verified_by: user.id,
+      completed_at: new Date().toISOString(),
+      updated_by: user.id,
+    })
+    .eq("id", procId);
 
   if (error) return { error: error.message };
 
@@ -210,13 +368,58 @@ export async function verifyProcurement(procId: string) {
     });
   }
 
+  // Notifikasi ke tim terkait kalau coverage sudah lengkap
+  try {
+    const coverage = await buildProcurementCoverage(supabase, existing.order_id);
+    if (coverage.all_verified) {
+      await notifyUsersWithRole("commercial_staff", {
+        type: "SHIPMENT_READY",
+        severity: "SUCCESS",
+        title: "Semua procurement ter-verify — siap shipment",
+        message: "Shipment dapat dibuat untuk order ini.",
+        link: `/orders/${existing.order_id}`,
+      });
+    }
+  } catch (e) {
+    console.error("[verifyProcurement] coverage check failed:", e);
+  }
+
   revalidatePath(`/orders/${existing.order_id}`);
   return { ok: true };
 }
 
-// =========================================================
+// ---------- DELETE ----------
+export async function deleteProcurement(procId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: existing } = await supabase
+    .from("procurements")
+    .select("status, order_id")
+    .eq("id", procId)
+    .single();
+  if (!existing) return { error: "Procurement tidak ditemukan." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya DRAFT dapat dihapus." };
+
+  await supabase.from("procurements").delete().eq("id", procId);
+
+  await writeAudit({
+    action: "DELETE",
+    module: "Procurement",
+    resourceType: "procurement",
+    resourceId: procId,
+  });
+  revalidatePath(`/orders/${existing.order_id}`);
+  return { ok: true };
+}
+
+// ============================================================
 // SHIPMENT
-// =========================================================
+// ============================================================
+
+// ---------- CREATE (dengan coverage gate) ----------
 export async function createShipment(orderId: string, input: unknown) {
   const parsed = shipmentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -225,17 +428,45 @@ export async function createShipment(orderId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  // Gate #1: order status harus ISSUED+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+  if (!order) return { error: "Order tidak ditemukan." };
+  if (
+    !["ISSUED", "IN_PROGRESS", "PARTIALLY_FULFILLED"].includes(order.status)
+  ) {
+    return { error: "Order belum siap untuk shipment." };
+  }
+
+  // Gate #2: SEMUA order items harus sudah ter-cover oleh procurement VERIFIED
+  const coverage = await buildProcurementCoverage(supabase, orderId);
+  if (!coverage.all_verified) {
+    const missing = coverage.items
+      .filter((i) => !i.fully_verified)
+      .map(
+        (i) =>
+          `${i.product_name} (verified ${i.procured_verified}/${i.ordered})`
+      )
+      .join(", ");
+    return {
+      error: `Shipment belum bisa dibuat. Order items belum sepenuhnya ter-procure & ter-verify: ${missing}.`,
+    };
+  }
+
   const d = parsed.data;
   const { data: ship, error } = await supabase
     .from("shipments")
     .insert({
       order_id: orderId,
-      shipment_date: d.shipment_date || null,
-      transporter_id: d.transporter_id || null,
-      vehicle_ref: d.vehicle_ref ?? null,
+      shipment_date: d.shipment_date,
+      transporter_id: d.transporter_id,
       origin: d.origin ?? null,
       destination: d.destination ?? null,
       delivery_ref: d.delivery_ref ?? null,
+      transport_cost: d.transport_cost,
       remarks: d.remarks ?? null,
       status: "DRAFT",
       created_by: user.id,
@@ -270,6 +501,7 @@ export async function createShipment(orderId: string, input: unknown) {
   return { data: ship };
 }
 
+// ---------- UPDATE ----------
 export async function updateShipment(shipId: string, input: unknown) {
   const parsed = shipmentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -278,21 +510,29 @@ export async function updateShipment(shipId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("shipments").select("status, order_id").eq("id", shipId).single();
+  const { data: existing } = await supabase
+    .from("shipments")
+    .select("status, order_id")
+    .eq("id", shipId)
+    .single();
   if (!existing) return { error: "Shipment tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya shipment DRAFT dapat diedit." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya shipment DRAFT dapat diedit." };
 
   const d = parsed.data;
-  const { error: updErr } = await supabase.from("shipments").update({
-    shipment_date: d.shipment_date || null,
-    transporter_id: d.transporter_id || null,
-    vehicle_ref: d.vehicle_ref ?? null,
-    origin: d.origin ?? null,
-    destination: d.destination ?? null,
-    delivery_ref: d.delivery_ref ?? null,
-    remarks: d.remarks ?? null,
-    updated_by: user.id,
-  }).eq("id", shipId);
+  const { error: updErr } = await supabase
+    .from("shipments")
+    .update({
+      shipment_date: d.shipment_date,
+      transporter_id: d.transporter_id,
+      origin: d.origin ?? null,
+      destination: d.destination ?? null,
+      delivery_ref: d.delivery_ref ?? null,
+      transport_cost: d.transport_cost,
+      remarks: d.remarks ?? null,
+      updated_by: user.id,
+    })
+    .eq("id", shipId);
 
   if (updErr) return { error: updErr.message };
 
@@ -315,36 +555,43 @@ export async function updateShipment(shipId: string, input: unknown) {
     resourceType: "shipment",
     resourceId: shipId,
   });
-
   revalidatePath(`/orders/${existing.order_id}`);
   return { ok: true };
 }
 
+// ---------- CONFIRM (dengan qty validation + quota realize) ----------
 export async function confirmShipment(shipId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: ship } = await supabase.from("shipments").select("*, order_id").eq("id", shipId).single();
+  const { data: ship } = await supabase
+    .from("shipments")
+    .select("*, order_id")
+    .eq("id", shipId)
+    .single();
   if (!ship) return { error: "Shipment tidak ditemukan." };
-  if (ship.status !== "DRAFT") return { error: "Hanya shipment DRAFT dapat dikonfirmasi." };
+  if (ship.status !== "DRAFT")
+    return { error: "Hanya shipment DRAFT dapat dikonfirmasi." };
 
   const orderId = ship.order_id;
 
-  // Get order items for reference
+  // Ambil order qty per product
   const { data: orderItems } = await supabase
     .from("order_items")
     .select("product_id, qty")
     .eq("order_id", orderId);
-  const orderQtyMap = new Map((orderItems ?? []).map((it) => [it.product_id, Number(it.qty)]));
+  const orderQtyMap = new Map(
+    (orderItems ?? []).map((it) => [it.product_id, Number(it.qty)])
+  );
 
-  // Get shipment items
+  // Ambil shipment items
   const { data: shipItems } = await supabase
     .from("shipment_items")
     .select("product_id, qty")
     .eq("shipment_id", shipId);
 
-  // Get already confirmed shipments (exclude this one)
+  // Ambil confirmed shipments
   const { data: confirmedShips } = await supabase
     .from("shipments")
     .select("id")
@@ -359,43 +606,62 @@ export async function confirmShipment(shipId: string) {
       .select("product_id, qty")
       .in("shipment_id", confirmedIds);
     for (const it of existingItems ?? []) {
-      shippedMap.set(it.product_id, (shippedMap.get(it.product_id) ?? 0) + Number(it.qty));
+      shippedMap.set(
+        it.product_id,
+        (shippedMap.get(it.product_id) ?? 0) + Number(it.qty)
+      );
     }
   }
 
-  // Validate qty: (already shipped + this shipment) <= order qty
+  // Validasi: sudah shipped + new <= ordered
   for (const it of shipItems ?? []) {
     const ordered = orderQtyMap.get(it.product_id) ?? 0;
     const alreadyShipped = shippedMap.get(it.product_id) ?? 0;
     const newTotal = alreadyShipped + Number(it.qty);
     if (newTotal > ordered) {
       return {
-        error: `Qty shipment melebihi order untuk salah satu produk (ordered: ${ordered}, akan menjadi: ${newTotal}).`,
+        error: `Qty shipment melebihi order (ordered: ${ordered}, akan menjadi: ${newTotal}).`,
       };
     }
   }
 
-  const { error } = await supabase.from("shipments").update({
-    status: "CONFIRMED",
-    confirmed_at: new Date().toISOString(),
-    confirmed_by: user.id,
-    updated_by: user.id,
-  }).eq("id", shipId);
+  // Update shipment status
+  const { error } = await supabase
+    .from("shipments")
+    .update({
+      status: "CONFIRMED",
+      confirmed_at: new Date().toISOString(),
+      confirmed_by: user.id,
+      updated_by: user.id,
+    })
+    .eq("id", shipId);
 
   if (error) return { error: error.message };
 
-  // Update order status: ISSUED → IN_PROGRESS / PARTIALLY_FULFILLED / FULFILLED
-  const { data: order } = await supabase.from("orders").select("status").eq("id", orderId).single();
-  let newStatus: string = order?.status ?? "IN_PROGRESS";
+  // Realize quota (emit PO_RELEASE + DISTRIBUTION_REALIZATION)
+  const { error: rpcErr } = await supabase.rpc("realize_quota_for_shipment", {
+    p_shipment_id: shipId,
+    p_actor: user.id,
+  });
+  if (rpcErr) {
+    console.error("[confirmShipment] realize_quota_for_shipment failed:", rpcErr);
+  }
 
-  // Compute shipped totals vs ordered
+  // Update order status
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  // Recompute shipped totals
   const { data: allConfirmed } = await supabase
     .from("shipments")
     .select("id")
     .eq("order_id", orderId)
     .eq("status", "CONFIRMED");
-  const allConfirmedIds = (allConfirmed ?? []).map((s) => s.id);
 
+  const allConfirmedIds = (allConfirmed ?? []).map((s) => s.id);
   const finalShipped = new Map<string, number>();
   if (allConfirmedIds.length > 0) {
     const { data: allItems } = await supabase
@@ -403,7 +669,10 @@ export async function confirmShipment(shipId: string) {
       .select("product_id, qty")
       .in("shipment_id", allConfirmedIds);
     for (const it of allItems ?? []) {
-      finalShipped.set(it.product_id, (finalShipped.get(it.product_id) ?? 0) + Number(it.qty));
+      finalShipped.set(
+        it.product_id,
+        (finalShipped.get(it.product_id) ?? 0) + Number(it.qty)
+      );
     }
   }
 
@@ -415,13 +684,14 @@ export async function confirmShipment(shipId: string) {
     if (shipped < qty) allFulfilled = false;
   }
 
+  let newStatus: string = order?.status ?? "IN_PROGRESS";
   if (allFulfilled && orderQtyMap.size > 0) newStatus = "FULFILLED";
   else if (anyShipped) newStatus = "PARTIALLY_FULFILLED";
 
-  await supabase.from("orders").update({
-    status: newStatus,
-    updated_by: user.id,
-  }).eq("id", orderId);
+  await supabase
+    .from("orders")
+    .update({ status: newStatus, updated_by: user.id })
+    .eq("id", orderId);
 
   await supabase.from("order_status_history").insert({
     order_id: orderId,
@@ -441,12 +711,40 @@ export async function confirmShipment(shipId: string) {
 
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
+  revalidatePath("/compliance");
   return { ok: true };
 }
 
-// =========================================================
+// ---------- DELETE ----------
+export async function deleteShipment(shipId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: existing } = await supabase
+    .from("shipments")
+    .select("status, order_id")
+    .eq("id", shipId)
+    .single();
+  if (!existing) return { error: "Shipment tidak ditemukan." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya DRAFT dapat dihapus." };
+
+  await supabase.from("shipments").delete().eq("id", shipId);
+
+  await writeAudit({
+    action: "DELETE",
+    module: "Shipment",
+    resourceType: "shipment",
+    resourceId: shipId,
+  });
+  revalidatePath(`/orders/${existing.order_id}`);
+  return { ok: true };
+}
+
+// ============================================================
 // DELIVERY
-// =========================================================
+// ============================================================
 export async function createDelivery(shipId: string, input: unknown) {
   const parsed = deliverySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -455,11 +753,20 @@ export async function createDelivery(shipId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: ship } = await supabase.from("shipments").select("order_id, status").eq("id", shipId).single();
+  const { data: ship } = await supabase
+    .from("shipments")
+    .select("order_id, status")
+    .eq("id", shipId)
+    .single();
   if (!ship) return { error: "Shipment tidak ditemukan." };
-  if (ship.status !== "CONFIRMED") return { error: "Shipment harus CONFIRMED dulu." };
+  if (ship.status !== "CONFIRMED")
+    return { error: "Shipment harus CONFIRMED dulu." };
 
-  const { data: existing } = await supabase.from("deliveries").select("id").eq("shipment_id", shipId).maybeSingle();
+  const { data: existing } = await supabase
+    .from("deliveries")
+    .select("id")
+    .eq("shipment_id", shipId)
+    .maybeSingle();
   if (existing) return { error: "Delivery untuk shipment ini sudah ada." };
 
   const d = parsed.data;
@@ -487,16 +794,19 @@ export async function createDelivery(shipId: string, input: unknown) {
     module: "Delivery",
     resourceType: "delivery",
     resourceId: delivery.id,
-    newValue: { delivery_number: delivery.delivery_number, shipment_id: shipId },
+    newValue: {
+      delivery_number: delivery.delivery_number,
+      shipment_id: shipId,
+    },
   });
 
   revalidatePath(`/orders/${ship.order_id}`);
   return { data: delivery };
 }
 
-// =========================================================
+// ============================================================
 // BAST
-// =========================================================
+// ============================================================
 export async function createBastDraft(orderId: string, input: unknown) {
   const parsed = bastSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -505,15 +815,43 @@ export async function createBastDraft(orderId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  // Guard: minimal 1 delivery
+  const { count: deliveryCount } = await supabase
+    .from("deliveries")
+    .select("*", { count: "exact", head: true })
+    .eq("order_id", orderId);
+
+  if ((deliveryCount ?? 0) === 0) {
+    return {
+      error:
+        "BAST hanya dapat dibuat setelah ada minimal 1 delivery yang tercatat.",
+    };
+  }
+
+  // Guard: order status minimal IN_PROGRESS
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+  if (!order) return { error: "Order tidak ditemukan." };
+  if (
+    !["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED", "CLOSED"].includes(
+      order.status
+    )
+  ) {
+    return { error: "Order belum siap untuk BAST." };
+  }
+
   const d = parsed.data;
   const { data: bast, error } = await supabase
     .from("basts")
     .insert({
       order_id: orderId,
-      bast_date: d.bast_date || null,
-      receiver_name: d.receiver_name ?? null,
+      bast_date: d.bast_date,
+      receiver_name: d.receiver_name,
       signed_by: d.signed_by ?? null,
-      signed_document_ref: d.signed_document_ref ?? null,
+      signed_document_path: d.signed_document_path,
       remarks: d.remarks ?? null,
       status: "DRAFT",
       created_by: user.id,
@@ -544,19 +882,27 @@ export async function updateBast(bastId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("basts").select("status, order_id").eq("id", bastId).single();
+  const { data: existing } = await supabase
+    .from("basts")
+    .select("status, order_id")
+    .eq("id", bastId)
+    .single();
   if (!existing) return { error: "BAST tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya BAST DRAFT dapat diedit." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya BAST DRAFT dapat diedit." };
 
   const d = parsed.data;
-  const { error } = await supabase.from("basts").update({
-    bast_date: d.bast_date || null,
-    receiver_name: d.receiver_name ?? null,
-    signed_by: d.signed_by ?? null,
-    signed_document_ref: d.signed_document_ref ?? null,
-    remarks: d.remarks ?? null,
-    updated_by: user.id,
-  }).eq("id", bastId);
+  const { error } = await supabase
+    .from("basts")
+    .update({
+      bast_date: d.bast_date,
+      receiver_name: d.receiver_name,
+      signed_by: d.signed_by ?? null,
+      signed_document_path: d.signed_document_path,
+      remarks: d.remarks ?? null,
+      updated_by: user.id,
+    })
+    .eq("id", bastId);
 
   if (error) return { error: error.message };
 
@@ -566,7 +912,6 @@ export async function updateBast(bastId: string, input: unknown) {
     resourceType: "bast",
     resourceId: bastId,
   });
-
   revalidatePath(`/orders/${existing.order_id}`);
   return { ok: true };
 }
@@ -576,16 +921,24 @@ export async function submitBast(bastId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("basts").select("status, order_id, bast_number").eq("id", bastId).single();
+  const { data: existing } = await supabase
+    .from("basts")
+    .select("status, order_id, bast_number")
+    .eq("id", bastId)
+    .single();
   if (!existing) return { error: "BAST tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya draft yang dapat disubmit." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya draft yang dapat disubmit." };
 
-  const { error } = await supabase.from("basts").update({
-    status: "SUBMITTED",
-    submitted_at: new Date().toISOString(),
-    submitted_by: user.id,
-    updated_by: user.id,
-  }).eq("id", bastId);
+  const { error } = await supabase
+    .from("basts")
+    .update({
+      status: "SUBMITTED",
+      submitted_at: new Date().toISOString(),
+      submitted_by: user.id,
+      updated_by: user.id,
+    })
+    .eq("id", bastId);
 
   if (error) return { error: error.message };
 
@@ -612,16 +965,24 @@ export async function verifyBast(bastId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("basts").select("status, order_id, bast_number, created_by").eq("id", bastId).single();
+  const { data: existing } = await supabase
+    .from("basts")
+    .select("status, order_id, bast_number, created_by")
+    .eq("id", bastId)
+    .single();
   if (!existing) return { error: "BAST tidak ditemukan." };
-  if (existing.status !== "SUBMITTED") return { error: "Hanya SUBMITTED yang dapat diverifikasi." };
+  if (existing.status !== "SUBMITTED")
+    return { error: "Hanya SUBMITTED yang dapat diverifikasi." };
 
-  const { error } = await supabase.from("basts").update({
-    status: "VERIFIED",
-    verified_at: new Date().toISOString(),
-    verified_by: user.id,
-    updated_by: user.id,
-  }).eq("id", bastId);
+  const { error } = await supabase
+    .from("basts")
+    .update({
+      status: "VERIFIED",
+      verified_at: new Date().toISOString(),
+      verified_by: user.id,
+      updated_by: user.id,
+    })
+    .eq("id", bastId);
 
   if (error) return { error: error.message };
 
@@ -651,28 +1012,40 @@ export async function completeBast(bastId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("basts").select("status, order_id, bast_number, created_by").eq("id", bastId).single();
+  const { data: existing } = await supabase
+    .from("basts")
+    .select("status, order_id, bast_number, created_by")
+    .eq("id", bastId)
+    .single();
   if (!existing) return { error: "BAST tidak ditemukan." };
   if (!["SUBMITTED", "VERIFIED"].includes(existing.status)) {
     return { error: "BAST harus SUBMITTED atau VERIFIED." };
   }
 
-  const { error } = await supabase.from("basts").update({
-    status: "COMPLETED",
-    completed_at: new Date().toISOString(),
-    completed_by: user.id,
-    updated_by: user.id,
-  }).eq("id", bastId);
+  const { error } = await supabase
+    .from("basts")
+    .update({
+      status: "COMPLETED",
+      completed_at: new Date().toISOString(),
+      completed_by: user.id,
+      updated_by: user.id,
+    })
+    .eq("id", bastId);
 
   if (error) return { error: error.message };
 
-  // Update order status to CLOSED if fully fulfilled
-  const { data: order } = await supabase.from("orders").select("status").eq("id", existing.order_id).single();
+  // Auto-close order jika FULFILLED
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", existing.order_id)
+    .single();
+
   if (order && order.status === "FULFILLED") {
-    await supabase.from("orders").update({
-      status: "CLOSED",
-      updated_by: user.id,
-    }).eq("id", existing.order_id);
+    await supabase
+      .from("orders")
+      .update({ status: "CLOSED", updated_by: user.id })
+      .eq("id", existing.order_id);
 
     await supabase.from("order_status_history").insert({
       order_id: existing.order_id,
@@ -705,50 +1078,40 @@ export async function completeBast(bastId: string) {
   return { ok: true };
 }
 
-// =========================================================
-// DELETE
-// =========================================================
-export async function deleteProcurement(procId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const { data: existing } = await supabase.from("procurements").select("status, order_id").eq("id", procId).single();
-  if (!existing) return { error: "Procurement tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya DRAFT dapat dihapus." };
-
-  await supabase.from("procurements").delete().eq("id", procId);
-  await writeAudit({ action: "DELETE", module: "Procurement", resourceType: "procurement", resourceId: procId });
-  revalidatePath(`/orders/${existing.order_id}`);
-  return { ok: true };
-}
-
-export async function deleteShipment(shipId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const { data: existing } = await supabase.from("shipments").select("status, order_id").eq("id", shipId).single();
-  if (!existing) return { error: "Shipment tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya DRAFT dapat dihapus." };
-
-  await supabase.from("shipments").delete().eq("id", shipId);
-  await writeAudit({ action: "DELETE", module: "Shipment", resourceType: "shipment", resourceId: shipId });
-  revalidatePath(`/orders/${existing.order_id}`);
-  return { ok: true };
-}
-
 export async function deleteBast(bastId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: existing } = await supabase.from("basts").select("status, order_id").eq("id", bastId).single();
+  const { data: existing } = await supabase
+    .from("basts")
+    .select("status, order_id")
+    .eq("id", bastId)
+    .single();
   if (!existing) return { error: "BAST tidak ditemukan." };
-  if (existing.status !== "DRAFT") return { error: "Hanya DRAFT dapat dihapus." };
+  if (existing.status !== "DRAFT")
+    return { error: "Hanya DRAFT dapat dihapus." };
 
   await supabase.from("basts").delete().eq("id", bastId);
-  await writeAudit({ action: "DELETE", module: "BAST", resourceType: "bast", resourceId: bastId });
+
+  await writeAudit({
+    action: "DELETE",
+    module: "BAST",
+    resourceType: "bast",
+    resourceId: bastId,
+  });
   revalidatePath(`/orders/${existing.order_id}`);
   return { ok: true };
+}
+
+// ============================================================
+// BAST DOCUMENT SIGNED URL
+// ============================================================
+export async function getBastDocumentUrl(path: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage
+    .from("bast-documents")
+    .createSignedUrl(path, 3600);
+  if (error) return { error: error.message };
+  return { url: data.signedUrl };
 }

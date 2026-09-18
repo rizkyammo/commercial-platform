@@ -6,6 +6,9 @@ import { writeAudit } from "@/lib/audit";
 import { orderDraftSchema, orderSubmitSchema } from "@/lib/validation/orders";
 import { createNotification, notifyUsersWithRole } from "@/features/notifications/actions";
 
+// ============================================================
+// HELPERS
+// ============================================================
 function computeLineValue(qty: number, unitPrice: number, exchangeRate: number, currency: string) {
   const priceIdr = currency === "IDR" ? unitPrice : unitPrice * exchangeRate;
   return { unitPriceIdr: priceIdr, lineValue: qty * priceIdr };
@@ -29,7 +32,9 @@ function computeCompletion(data: {
   return score;
 }
 
-// ============ CREATE DRAFT ============
+// ============================================================
+// CREATE DRAFT
+// ============================================================
 export async function createOrderDraft(input: unknown) {
   const parsed = orderDraftSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -70,7 +75,6 @@ export async function createOrderDraft(input: unknown) {
 
   if (error) return { error: error.message };
 
-  // items
   if (d.items.length > 0) {
     const rows = d.items.map((it, idx) => {
       const { unitPriceIdr, lineValue } = computeLineValue(it.qty, it.unit_price, it.exchange_rate, it.currency);
@@ -112,7 +116,9 @@ export async function createOrderDraft(input: unknown) {
   return { data: order };
 }
 
-// ============ UPDATE DRAFT ============
+// ============================================================
+// UPDATE DRAFT
+// ============================================================
 export async function updateOrderDraft(orderId: string, input: unknown) {
   const parsed = orderDraftSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -149,7 +155,6 @@ export async function updateOrderDraft(orderId: string, input: unknown) {
 
   if (error) return { error: error.message };
 
-  // Replace items: delete all, insert new
   await supabase.from("order_items").delete().eq("order_id", orderId);
 
   if (d.items.length > 0) {
@@ -174,19 +179,15 @@ export async function updateOrderDraft(orderId: string, input: unknown) {
     await supabase.from("order_items").insert(rows);
   }
 
-  await writeAudit({
-    action: "UPDATE",
-    module: "Order",
-    resourceType: "order",
-    resourceId: orderId,
-  });
-
+  await writeAudit({ action: "UPDATE", module: "Order", resourceType: "order", resourceId: orderId });
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
   return { ok: true };
 }
 
-// ============ SUBMIT ============
+// ============================================================
+// SUBMIT
+// ============================================================
 export async function submitOrder(orderId: string, input: unknown) {
   const parsed = orderSubmitSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -201,9 +202,7 @@ export async function submitOrder(orderId: string, input: unknown) {
     return { error: `Order tidak dapat disubmit dari status ${existing.status}.` };
   }
 
-  // Save latest data first (re-use update logic, but skip status check since we already checked)
   const d = parsed.data;
-  const completion = 100;
 
   const { error: updErr } = await supabase
     .from("orders")
@@ -216,7 +215,7 @@ export async function submitOrder(orderId: string, input: unknown) {
       currency: d.currency,
       exchange_rate: d.exchange_rate,
       remarks: d.remarks ?? null,
-      completion_pct: completion,
+      completion_pct: 100,
       status: "SUBMITTED",
       po_status: "SUBMITTED",
       submitted_at: new Date().toISOString(),
@@ -270,7 +269,7 @@ export async function submitOrder(orderId: string, input: unknown) {
     type: "ORDER_SUBMITTED",
     severity: "INFO",
     title: `Order ${existing.order_number} menunggu review`,
-    message: `Order baru disubmit dan perlu diverifikasi.`,
+    message: "Order baru disubmit dan perlu diverifikasi.",
     link: `/orders/${orderId}`,
   });
 
@@ -279,7 +278,9 @@ export async function submitOrder(orderId: string, input: unknown) {
   return { ok: true };
 }
 
-// ============ REVIEW / START REVIEW ============
+// ============================================================
+// START REVIEW
+// ============================================================
 export async function startReview(orderId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -289,10 +290,7 @@ export async function startReview(orderId: string) {
   if (!existing) return { error: "Order tidak ditemukan." };
   if (existing.status !== "SUBMITTED") return { error: "Order harus berstatus SUBMITTED." };
 
-  await supabase.from("orders").update({
-    status: "UNDER_REVIEW",
-    updated_by: user.id,
-  }).eq("id", orderId);
+  await supabase.from("orders").update({ status: "UNDER_REVIEW", updated_by: user.id }).eq("id", orderId);
 
   await supabase.from("order_status_history").insert({
     order_id: orderId,
@@ -302,18 +300,14 @@ export async function startReview(orderId: string) {
     actor_user_id: user.id,
   });
 
-  await writeAudit({
-    action: "START_REVIEW",
-    module: "Order",
-    resourceType: "order",
-    resourceId: orderId,
-  });
-
+  await writeAudit({ action: "START_REVIEW", module: "Order", resourceType: "order", resourceId: orderId });
   revalidatePath(`/orders/${orderId}`);
   return { ok: true };
 }
 
-// ============ RETURN ============
+// ============================================================
+// RETURN
+// ============================================================
 export async function returnOrder(orderId: string, reason: string) {
   if (!reason || reason.trim().length < 5) return { error: "Alasan minimal 5 karakter." };
 
@@ -344,13 +338,7 @@ export async function returnOrder(orderId: string, reason: string) {
     actor_user_id: user.id,
   });
 
-  await writeAudit({
-    action: "RETURN",
-    module: "Order",
-    resourceType: "order",
-    resourceId: orderId,
-    reason,
-  });
+  await writeAudit({ action: "RETURN", module: "Order", resourceType: "order", resourceId: orderId, reason });
 
   if (existing.created_by) {
     await createNotification({
@@ -368,7 +356,9 @@ export async function returnOrder(orderId: string, reason: string) {
   return { ok: true };
 }
 
-// ============ APPROVE ============
+// ============================================================
+// APPROVE
+// ============================================================
 export async function approveOrder(orderId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -393,12 +383,7 @@ export async function approveOrder(orderId: string) {
     actor_user_id: user.id,
   });
 
-  await writeAudit({
-    action: "APPROVE",
-    module: "Order",
-    resourceType: "order",
-    resourceId: orderId,
-  });
+  await writeAudit({ action: "APPROVE", module: "Order", resourceType: "order", resourceId: orderId });
 
   if (existing.created_by) {
     await createNotification({
@@ -415,7 +400,9 @@ export async function approveOrder(orderId: string) {
   return { ok: true };
 }
 
-// ============ AMENDMENT REQUEST ============
+// ============================================================
+// AMENDMENT REQUEST
+// ============================================================
 export async function requestAmendment(orderId: string, reason: string, payload: Record<string, unknown>) {
   if (!reason || reason.trim().length < 5) return { error: "Alasan minimal 5 karakter." };
 
@@ -470,7 +457,9 @@ export async function requestAmendment(orderId: string, reason: string, payload:
   return { ok: true };
 }
 
-// ============ CANCEL REQUEST ============
+// ============================================================
+// CANCEL REQUEST
+// ============================================================
 export async function requestCancellation(orderId: string, reason: string) {
   if (!reason || reason.trim().length < 5) return { error: "Alasan minimal 5 karakter." };
 
@@ -503,13 +492,7 @@ export async function requestCancellation(orderId: string, reason: string) {
     actor_user_id: user.id,
   });
 
-  await writeAudit({
-    action: "CANCEL_REQUEST",
-    module: "Order",
-    resourceType: "order",
-    resourceId: orderId,
-    reason,
-  });
+  await writeAudit({ action: "CANCEL_REQUEST", module: "Order", resourceType: "order", resourceId: orderId, reason });
 
   await notifyUsersWithRole("commercial_manager", {
     type: "CANCELLATION_REQUEST",
@@ -523,7 +506,9 @@ export async function requestCancellation(orderId: string, reason: string) {
   return { ok: true };
 }
 
-// ============ APPROVE / REJECT APPROVAL REQUEST ============
+// ============================================================
+// REVIEW APPROVAL REQUEST (AMENDMENT / CANCELLATION)
+// ============================================================
 export async function reviewApprovalRequest(
   requestId: string,
   decision: "APPROVED" | "REJECTED",
@@ -533,16 +518,10 @@ export async function reviewApprovalRequest(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  const { data: req } = await supabase
-    .from("approval_requests")
-    .select("*")
-    .eq("id", requestId)
-    .single();
-
+  const { data: req } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
   if (!req) return { error: "Request tidak ditemukan." };
   if (req.status !== "PENDING") return { error: "Request sudah diproses." };
 
-  // Update approval request status
   const { error: updErr } = await supabase
     .from("approval_requests")
     .update({
@@ -563,7 +542,7 @@ export async function reviewApprovalRequest(
 
   if (!order) return { error: "Order tidak ditemukan." };
 
-  // ========== CANCELLATION APPROVED ==========
+  // ===== CANCELLATION APPROVED =====
   if (decision === "APPROVED" && req.type === "CANCELLATION") {
     await supabase.from("orders").update({
       status: "CANCELLED",
@@ -581,11 +560,22 @@ export async function reviewApprovalRequest(
       reason: req.reason,
       actor_user_id: user.id,
     });
+
+    // Release any outstanding quota commitment
+    try {
+      const { error: relErr } = await supabase.rpc("release_order_quota", {
+        p_order_id: req.order_id,
+        p_actor: user.id,
+        p_reason: req.reason ?? "Order cancelled",
+      });
+      if (relErr) console.error("[cancellation] release_quota failed:", relErr);
+    } catch (e) {
+      console.error("[cancellation] release_quota exception:", e);
+    }
   }
 
-  // ========== AMENDMENT APPROVED ==========
+  // ===== AMENDMENT APPROVED =====
   if (decision === "APPROVED" && req.type === "AMENDMENT") {
-    // Panggil RPC untuk ubah status ke DRAFT + catat metadata
     const { error: rpcErr } = await supabase.rpc("apply_amendment_approval", {
       p_order_id: req.order_id,
       p_actor: user.id,
@@ -605,7 +595,6 @@ export async function reviewApprovalRequest(
       actor_user_id: user.id,
     });
 
-    // Notifikasi ke requester bahwa order siap diedit
     if (req.requested_by) {
       await createNotification({
         userId: req.requested_by,
@@ -618,7 +607,7 @@ export async function reviewApprovalRequest(
     }
   }
 
-  // ========== AMENDMENT REJECTED ==========
+  // ===== AMENDMENT REJECTED =====
   if (decision === "REJECTED" && req.type === "AMENDMENT") {
     await supabase.from("order_status_history").insert({
       order_id: req.order_id,
@@ -630,7 +619,7 @@ export async function reviewApprovalRequest(
     });
   }
 
-  // ========== CANCELLATION REJECTED ==========
+  // ===== CANCELLATION REJECTED =====
   if (decision === "REJECTED" && req.type === "CANCELLATION") {
     await supabase.from("order_status_history").insert({
       order_id: req.order_id,
@@ -651,15 +640,17 @@ export async function reviewApprovalRequest(
     reason: notes,
   });
 
-  // Notifikasi umum ke requester (untuk cancellation & reject)
-  if (req.requested_by && req.type === "CANCELLATION") {
-    await createNotification({
-      userId: req.requested_by,
-      type: decision === "APPROVED" ? "CANCEL_APPROVED" : "CANCEL_REJECTED",
-      severity: decision === "APPROVED" ? "SUCCESS" : "WARNING",
-      title: `Pembatalan ${order.order_number} ${decision === "APPROVED" ? "disetujui" : "ditolak"}`,
-      link: `/orders/${req.order_id}`,
-    });
+  // Notifikasi umum ke requester
+  if (req.requested_by) {
+    if (req.type === "CANCELLATION") {
+      await createNotification({
+        userId: req.requested_by,
+        type: decision === "APPROVED" ? "CANCEL_APPROVED" : "CANCEL_REJECTED",
+        severity: decision === "APPROVED" ? "SUCCESS" : "WARNING",
+        title: `Pembatalan ${order.order_number} ${decision === "APPROVED" ? "disetujui" : "ditolak"}`,
+        link: `/orders/${req.order_id}`,
+      });
+    }
   }
 
   revalidatePath(`/orders/${req.order_id}`);

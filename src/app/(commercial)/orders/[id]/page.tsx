@@ -16,6 +16,8 @@ import {
   listVendorsSimple,
   listTransportersSimple,
 } from "@/features/flow/queries";
+import { getProcurementCoverage } from "@/features/flow/actions";
+import { getOrderComplianceStatus } from "@/features/compliance/queries";
 import { createClient } from "@/lib/supabase/server";
 import { OrderDetail } from "./order-detail";
 
@@ -48,6 +50,8 @@ export default async function OrderDetailPage({
     basts,
     vendors,
     transporters,
+    compliance,
+    coverage,
   ] = await Promise.all([
     getOrderItems(id),
     getOrderHistory(id),
@@ -61,14 +65,17 @@ export default async function OrderDetailPage({
     listBasts(id),
     listVendorsSimple(),
     listTransportersSimple(),
+    getOrderComplianceStatus(id, (order as { sk_id?: string | null }).sk_id ?? null),
+    getProcurementCoverage(id),
   ]);
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data: perms } = await supabase.rpc("current_user_permissions");
   const permissions: string[] = perms ?? [];
 
-  // Order items untuk reference di shipment tab
   const orderItemsRef = items.map((it) => ({
     product_id: it.product_id,
     qty: Number(it.qty),
@@ -91,6 +98,8 @@ export default async function OrderDetailPage({
       vendors={vendors}
       transporters={transporters}
       orderItemsRef={orderItemsRef}
+      compliance={compliance as any}
+      coverage={coverage}
       currentUserId={user?.id ?? ""}
       permissions={permissions}
     />

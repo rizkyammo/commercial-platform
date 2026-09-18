@@ -12,6 +12,7 @@ import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/client";
 import { createOrderDraft } from "@/features/orders/actions";
 import type { OrderItemInput } from "@/lib/validation/orders";
+import { BUSINESS_MODELS, DEFAULT_BUSINESS_MODEL } from "@/lib/constants/business-models";
 
 type CustomerOption = { id: string; code: string; name: string };
 type ProductOption = { id: string; code: string; name: string; uom: string };
@@ -40,7 +41,7 @@ export function NewOrderForm({
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? "");
   const [siteId, setSiteId] = useState("");
   const [contractId, setContractId] = useState("");
-  const [businessModel, setBusinessModel] = useState("Direct Sale");
+  const [businessModel, setBusinessModel] = useState<string>(DEFAULT_BUSINESS_MODEL);
   const [poNumber, setPoNumber] = useState("");
   const [poDate, setPoDate] = useState("");
   const [currency, setCurrency] = useState("IDR");
@@ -154,14 +155,13 @@ export function NewOrderForm({
                 {contracts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
             </FormField>
-            <FormField label="Business Model">
-              <Select value={businessModel} onChange={(e) => setBusinessModel(e.target.value)}>
-                <option value="Direct Sale">Direct Sale</option>
-                <option value="Consignment">Consignment</option>
-                <option value="Call-Off">Call-Off</option>
-                <option value="Full Payment">Full Payment</option>
-              </Select>
-            </FormField>
+<FormField label="Business Model">
+  <Select value={businessModel} onChange={(e) => setBusinessModel(e.target.value)}>
+    {BUSINESS_MODELS.map((m) => (
+      <option key={m.value} value={m.value}>{m.label}</option>
+    ))}
+  </Select>
+</FormField>
             <FormField label="PO Number">
               <Input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} placeholder="BRWK71" />
             </FormField>

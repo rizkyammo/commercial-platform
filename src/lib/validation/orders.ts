@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { BUSINESS_MODELS } from "@/lib/constants/business-models";
+
+const businessModelValues = BUSINESS_MODELS.map((b) => b.value) as [
+  string,
+  ...string[],
+];
 
 export const orderItemSchema = z.object({
   id: z.string().uuid().optional(),
@@ -15,7 +21,7 @@ export const orderDraftSchema = z.object({
   customer_id: z.string().uuid().or(z.literal("")).optional().nullable(),
   site_id: z.string().uuid().or(z.literal("")).optional().nullable(),
   contract_id: z.string().uuid().or(z.literal("")).optional().nullable(),
-  business_model: z.string().max(50).optional().nullable(),
+  business_model: z.enum(businessModelValues).optional().nullable(),
   po_number: z.string().max(100).optional().nullable(),
   po_date: z.string().optional().nullable().or(z.literal("")),
   currency: z.string().default("IDR"),
@@ -28,6 +34,7 @@ export const orderSubmitSchema = z.object({
   customer_id: z.string().uuid({ message: "Customer wajib dipilih" }),
   site_id: z.string().uuid({ message: "Site wajib dipilih" }),
   contract_id: z.string().uuid({ message: "Contract wajib dipilih" }),
+  business_model: z.enum(businessModelValues).optional().nullable(),
   po_number: z.string().min(1, "PO Number wajib diisi").max(100),
   po_date: z.string().min(1, "PO Date wajib diisi"),
   currency: z.string().min(1),
