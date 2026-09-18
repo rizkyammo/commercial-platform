@@ -227,18 +227,18 @@ export function InvoicingClient({
       </div>
 
       {/* PROGRESS VS ORDER VALUE */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <div>
             <div className="text-sm font-semibold">
               Composition vs Order Value
             </div>
-            <div className="text-xs text-[#6E6E73] mt-0.5">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">
               Outstanding = Issued − Paid (dari invoice yang sudah terbit)
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-[#6E6E73] uppercase tracking-wide">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
               Outstanding
             </div>
             <div className="text-lg font-semibold text-[#FF3B30]">
@@ -271,7 +271,7 @@ export function InvoicingClient({
           />
         </div>
 
-        <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73] flex-wrap">
+        <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73] dark:text-[#8E8E93] flex-wrap">
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#34C759]" />
             Paid ({fmt(t.paid)})
@@ -289,11 +289,11 @@ export function InvoicingClient({
 
       {/* UNINVOICED ORDERS LIST */}
       {uninvoicedOrders.length > 0 && (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl">
-          <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between gap-3 flex-wrap">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+          <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h2 className="font-semibold">Uninvoiced Orders</h2>
-              <p className="text-xs text-[#6E6E73] mt-0.5">
+              <p className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">
                 Order yang belum diterbitkan invoice-nya
               </p>
             </div>
@@ -364,10 +364,10 @@ export function InvoicingClient({
       )}
 
       {/* AGING */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <div className="text-sm font-semibold">Invoice Aging</div>
-          <div className="text-xs text-[#6E6E73]">
+          <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
             Basis: invoice terbit (ISSUED/SENT/PARTIAL_PAID/OVERDUE)
           </div>
         </div>
@@ -375,9 +375,9 @@ export function InvoicingClient({
           {dashboard.buckets.map((b) => (
             <div
               key={b.bucket}
-              className="border border-[#E5E5EA] rounded-lg px-4 py-3"
+              className="border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-4 py-3"
             >
-              <div className="text-xs text-[#6E6E73] uppercase tracking-wide">
+              <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
                 {b.bucket === "CURRENT" ? "Not Due" : `${b.bucket} days`}
               </div>
               <div
@@ -386,12 +386,12 @@ export function InvoicingClient({
                     ? "text-[#FF3B30]"
                     : b.bucket === "61-90"
                       ? "text-[#FF9500]"
-                      : "text-[#1D1D1F]"
+                      : "text-[#1D1D1F] dark:text-[#F5F5F7]"
                 }`}
               >
                 {b.count}
               </div>
-              <div className="mt-0.5 text-xs text-[#6E6E73] font-mono">
+              <div className="mt-0.5 text-xs text-[#6E6E73] dark:text-[#8E8E93] font-mono">
                 {fmt(b.amount)}
               </div>
             </div>
@@ -400,8 +400,8 @@ export function InvoicingClient({
       </div>
 
       {/* INVOICE LIST */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col gap-4">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col gap-4">
           <div className="-mx-1 overflow-x-auto pb-1">
             <div className="flex gap-1 min-w-max px-1">
               {TABS.map((tab) => {
@@ -413,7 +413,7 @@ export function InvoicingClient({
                     className={`h-9 px-3 rounded-lg text-sm whitespace-nowrap shrink-0 ${
                       active
                         ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
-                        : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                        : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                     }`}
                   >
                     {tab.label}
@@ -469,7 +469,7 @@ export function InvoicingClient({
           <TBody>
             {rows.length === 0 ? (
               <TR>
-                <TD colSpan={10} className="text-center text-[#6E6E73] py-10">
+                <TD colSpan={10} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">
                   Belum ada invoice.
                 </TD>
               </TR>
@@ -564,10 +564,10 @@ function KpiCard({
           ? "text-[#FF3B30]"
           : tone === "green"
             ? "text-[#34C759]"
-            : "text-[#1D1D1F]";
+            : "text-[#1D1D1F] dark:text-[#F5F5F7]";
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-4">
-      <div className="text-xs text-[#6E6E73] uppercase tracking-wide">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4">
+      <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
         {label}
       </div>
       <div className={`mt-2 text-lg font-semibold ${color} truncate`}>

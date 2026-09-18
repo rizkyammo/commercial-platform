@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
   return (
     <div>
       <h1 className="text-3xl font-semibold">Forgot Password</h1>
-      <p className="mt-2 text-[#6E6E73]">
+      <p className="mt-2 text-[#6E6E73] dark:text-[#8E8E93]">
         Masukkan email Anda, kami akan mengirim link reset.
       </p>
 
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] bg-white focus:outline-none focus:border-[#0A84FF]"
+            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] focus:outline-none focus:border-[#0A84FF]"
           />
         </div>
 

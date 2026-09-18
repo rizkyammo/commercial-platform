@@ -250,7 +250,7 @@ export function ReportViewer({
       </div>
 
       {/* ============================ TOOLBAR ============================ */}
-      <div className="no-print bg-white border border-[#E5E5EA] rounded-xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
+      <div className="no-print bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-2 items-center flex-wrap">
           <Input
             type="date"
@@ -258,7 +258,7 @@ export function ReportViewer({
             onChange={(e) => setFrom(e.target.value)}
             className="max-w-[160px]"
           />
-          <span className="text-xs text-[#6E6E73]">→</span>
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">→</span>
           <Input
             type="date"
             value={to}
@@ -290,7 +290,7 @@ export function ReportViewer({
       </div>
 
       {/* ============================ PDF PREVIEW ============================ */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden shadow-sm">
 <PdfReport
   meta={meta}
   columns={columns}

@@ -242,7 +242,7 @@ export function ProcurementTab({
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">Procurement</h2>
-          <p className="text-sm text-[#6E6E73]">
+          <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Anda dapat submit per vendor. Shipment terkunci sampai semua item
             ter-verify.
           </p>
@@ -259,9 +259,9 @@ export function ProcurementTab({
 
       {/* COVERAGE BOARD */}
       {totalItems > 0 && (
-        <div className="mb-4 bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="mb-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           {/* Top summary */}
-          <div className="px-5 py-4 border-b border-[#E5E5EA]">
+          <div className="px-5 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3 flex-wrap text-sm">
                 <div className="font-medium">Coverage Progress</div>
@@ -284,10 +284,10 @@ export function ProcurementTab({
 
             {/* Progress percentages */}
             <div className="flex items-center gap-4 mt-3 text-xs">
-              <span className="text-[#6E6E73]">Procured:</span>
+              <span className="text-[#6E6E73] dark:text-[#8E8E93]">Procured:</span>
               <span className="font-medium">{pctProcuredDisplay}%</span>
-              <span className="text-[#6E6E73]">·</span>
-              <span className="text-[#6E6E73]">Verified:</span>
+              <span className="text-[#6E6E73] dark:text-[#8E8E93]">·</span>
+              <span className="text-[#6E6E73] dark:text-[#8E8E93]">Verified:</span>
               <span
                 className={`font-medium ${
                   pctVerifiedDisplay === 100
@@ -313,7 +313,7 @@ export function ProcurementTab({
                   title={`Procured (menunggu verify) ${pctInFlightDisplay}%`}
                 />
               </div>
-              <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73]">
+              <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73] dark:text-[#8E8E93]">
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#34C759]" />
                   Verified ({pctVerifiedDisplay}%)
@@ -371,13 +371,13 @@ export function ProcurementTab({
                     </div>
                     <div className="flex items-center gap-4 flex-wrap">
                       <div className="text-right text-xs">
-                        <div className="text-[#6E6E73]">Ordered</div>
+                        <div className="text-[#6E6E73] dark:text-[#8E8E93]">Ordered</div>
                         <div className="font-mono font-medium">
                           {item.ordered.toLocaleString("id-ID")} {item.uom}
                         </div>
                       </div>
                       <div className="text-right text-xs">
-                        <div className="text-[#6E6E73]">Procured</div>
+                        <div className="text-[#6E6E73] dark:text-[#8E8E93]">Procured</div>
                         <div
                           className={`font-mono font-medium ${
                             item.fully_procured
@@ -391,7 +391,7 @@ export function ProcurementTab({
                         </div>
                       </div>
                       <div className="text-right text-xs">
-                        <div className="text-[#6E6E73]">Verified</div>
+                        <div className="text-[#6E6E73] dark:text-[#8E8E93]">Verified</div>
                         <div
                           className={`font-mono font-medium ${
                             item.fully_verified
@@ -437,7 +437,7 @@ export function ProcurementTab({
                       {item.contributions.map((c, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between text-xs py-1 border-l-2 border-[#E5E5EA] pl-3"
+                          className="flex items-center justify-between text-xs py-1 border-l-2 border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pl-3"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="font-mono text-[#8E8E93]">
@@ -484,7 +484,7 @@ export function ProcurementTab({
 
       {/* LIST PROCUREMENTS */}
       {procurements.length === 0 ? (
-        <div className="text-sm text-[#6E6E73] text-center py-10 bg-white border border-[#E5E5EA] rounded-xl">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
           {!canEdit
             ? "Procurement hanya dapat dibuat setelah order di-issue."
             : !canCreate
@@ -492,7 +492,7 @@ export function ProcurementTab({
               : "Belum ada procurement. Klik + New Procurement."}
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           <Table>
             <THead>
               <TR>
@@ -680,7 +680,7 @@ export function ProcurementTab({
               </Button>
             </div>
             {draftItems.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-6 border border-dashed border-[#E5E5EA] rounded-lg">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-6 border border-dashed border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg">
                 Belum ada item.
               </div>
             ) : (
@@ -778,9 +778,9 @@ export function ProcurementTab({
                 </TBody>
               </Table>
             )}
-            <div className="mt-2 text-right text-sm text-[#6E6E73]">
+            <div className="mt-2 text-right text-sm text-[#6E6E73] dark:text-[#8E8E93]">
               Total:{" "}
-              <span className="font-medium text-[#1D1D1F]">
+              <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
                 {form.currency} {totalCost.toLocaleString("id-ID")}
               </span>
             </div>

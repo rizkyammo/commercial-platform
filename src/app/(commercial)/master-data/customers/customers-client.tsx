@@ -134,8 +134,8 @@ export function CustomersClient({
 
   return (
     <>
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <form onSubmit={submitSearch} className="flex flex-1 gap-2 flex-wrap">
             <Input
               name="q"
@@ -168,7 +168,7 @@ export function CustomersClient({
           <TBody>
             {rows.length === 0 && (
               <TR>
-                <TD colSpan={7} className="text-center text-[#6E6E73] py-10">
+                <TD colSpan={7} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">
                   No customers found.
                 </TD>
               </TR>
@@ -181,8 +181,8 @@ export function CustomersClient({
                     {r.name}
                   </Link>
                 </TD>
-                <TD className="text-[#6E6E73]">{r.email ?? "—"}</TD>
-                <TD className="text-[#6E6E73]">{r.phone ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.email ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.phone ?? "—"}</TD>
                 <TD>{r.payment_term_days}d</TD>
                 <TD>
                   <Badge tone={r.is_active ? "green" : "grey"}>

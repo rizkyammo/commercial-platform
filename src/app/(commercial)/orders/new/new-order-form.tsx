@@ -130,7 +130,7 @@ export function NewOrderForm({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
           <h2 className="font-semibold mb-4">Order Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Customer" required>
@@ -191,8 +191,8 @@ export function NewOrderForm({
           </div>
         </div>
 
-        <div className="bg-white border border-[#E5E5EA] rounded-xl">
-          <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+          <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
             <h2 className="font-semibold">Items</h2>
             <Button size="sm" variant="secondary" onClick={addItem} disabled={products.length === 0}>
               + Add Item
@@ -200,7 +200,7 @@ export function NewOrderForm({
           </div>
 
           {items.length === 0 ? (
-            <div className="p-10 text-center text-sm text-[#6E6E73]">
+            <div className="p-10 text-center text-sm text-[#6E6E73] dark:text-[#8E8E93]">
               Belum ada item. Klik <span className="font-medium">+ Add Item</span>.
             </div>
           ) : (
@@ -262,8 +262,8 @@ export function NewOrderForm({
         </div>
       </div>
 
-      <aside className="bg-white border border-[#E5E5EA] rounded-xl p-6 h-fit sticky top-24">
-        <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide">Summary</h2>
+      <aside className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 h-fit sticky top-24">
+        <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">Summary</h2>
         <div className="mt-4 space-y-3 text-sm">
           <Row label="Items" value={String(items.length)} />
           <Row label="Currency" value={currency} />
@@ -296,7 +296,7 @@ export function NewOrderForm({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[#6E6E73]">{label}</span>
+      <span className="text-[#6E6E73] dark:text-[#8E8E93]">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );

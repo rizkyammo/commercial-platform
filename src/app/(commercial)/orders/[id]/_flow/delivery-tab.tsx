@@ -88,7 +88,7 @@ export function DeliveryTab({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold">Delivery</h2>
-          <p className="text-sm text-[#6E6E73]">Konfirmasi barang diterima customer.</p>
+          <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">Konfirmasi barang diterima customer.</p>
         </div>
       </div>
 
@@ -112,11 +112,11 @@ export function DeliveryTab({
       )}
 
       {deliveries.length === 0 ? (
-        <div className="text-sm text-[#6E6E73] text-center py-10 bg-white border border-[#E5E5EA] rounded-xl">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
           Belum ada delivery.
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           <Table>
             <THead>
               <TR>

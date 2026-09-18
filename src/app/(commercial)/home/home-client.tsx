@@ -57,7 +57,7 @@ export function HomeClient({ data }: { data: HomeData }) {
           <h1 className="text-3xl font-semibold tracking-tight">
             {greeting}, {profile.full_name}
           </h1>
-          <p className="mt-1 text-sm text-[#6E6E73]">{today}</p>
+          <p className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">{today}</p>
         </div>
         <div className="text-right text-xs text-[#8E8E93] max-w-xs">
           <div className="italic">"Keep the flow moving."</div>
@@ -93,14 +93,14 @@ export function HomeClient({ data }: { data: HomeData }) {
         />
 
         {/* Today panel */}
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-4 flex flex-col">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-xs text-[#6E6E73]">Today</div>
+              <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">Today</div>
               <div className="text-sm font-medium mt-0.5">{today.split(",")[1]?.trim() ?? today}</div>
             </div>
             <svg
-              className="w-5 h-5 text-[#1D1D1F]"
+              className="w-5 h-5 text-[#1D1D1F] dark:text-[#F5F5F7]"
               viewBox="0 0 20 20"
               fill="none"
               stroke="currentColor"
@@ -122,8 +122,8 @@ export function HomeClient({ data }: { data: HomeData }) {
       {/* ============================ ROW 2: Next Actions | Order Progress ============================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Next actions */}
-        <div className="lg:col-span-2 bg-white border border-[#E5E5EA] rounded-xl">
-          <div className="px-5 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+          <div className="px-5 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
             <div className="font-semibold">Next actions</div>
             <Link
               href="/orders"
@@ -147,7 +147,7 @@ export function HomeClient({ data }: { data: HomeData }) {
             <TBody>
               {nextActions.length === 0 ? (
                 <TR>
-                  <TD colSpan={6} className="text-center text-[#6E6E73] py-10">
+                  <TD colSpan={6} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">
                     Tidak ada action saat ini. Semua aman ✅
                   </TD>
                 </TR>
@@ -168,7 +168,7 @@ export function HomeClient({ data }: { data: HomeData }) {
                           : a.status_label}
                       </div>
                     </TD>
-                    <TD className="text-sm text-[#6E6E73]">
+                    <TD className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
                       {a.customer_name} / {a.site_name}
                     </TD>
                     <TD>
@@ -203,10 +203,10 @@ export function HomeClient({ data }: { data: HomeData }) {
         </div>
 
         {/* Order progress */}
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="font-semibold">Order progress</div>
-            <div className="text-xs text-[#6E6E73] flex items-center gap-1">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] flex items-center gap-1">
               This month
               <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5.5 7l4.5 4.5L14.5 7z" />
@@ -218,7 +218,7 @@ export function HomeClient({ data }: { data: HomeData }) {
               const pct = p.total > 0 ? (p.count / p.total) * 100 : 0;
               return (
                 <div key={p.stage} className="flex items-center gap-3 text-xs">
-                  <span className="w-24 text-[#6E6E73] truncate">
+                  <span className="w-24 text-[#6E6E73] dark:text-[#8E8E93] truncate">
                     {p.stage.replace(/_/g, " ")}
                   </span>
                   <div className="flex-1 h-2 bg-[#F2F2F4] rounded-full overflow-hidden">
@@ -227,7 +227,7 @@ export function HomeClient({ data }: { data: HomeData }) {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="w-8 text-right font-medium text-[#1D1D1F]">
+                  <span className="w-8 text-right font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
                     {p.count}
                   </span>
                 </div>
@@ -240,8 +240,8 @@ export function HomeClient({ data }: { data: HomeData }) {
       {/* ============================ ROW 3: Recent Activity | Compliance Quota | Quick Links ============================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent activity */}
-        <div className="bg-white border border-[#E5E5EA] rounded-xl">
-          <div className="px-5 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+          <div className="px-5 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
             <div className="font-semibold">Recent activity</div>
             <Link
               href="/orders"
@@ -252,7 +252,7 @@ export function HomeClient({ data }: { data: HomeData }) {
           </div>
           <div className="divide-y divide-[#F2F2F4]">
             {recentActivity.length === 0 ? (
-              <div className="p-6 text-xs text-[#6E6E73] text-center">
+              <div className="p-6 text-xs text-[#6E6E73] dark:text-[#8E8E93] text-center">
                 Belum ada aktivitas.
               </div>
             ) : (
@@ -276,7 +276,7 @@ export function HomeClient({ data }: { data: HomeData }) {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="truncate text-[#1D1D1F]">
+                    <div className="truncate text-[#1D1D1F] dark:text-[#F5F5F7]">
                       {a.reference} {a.action}
                     </div>
                     <div className="text-[10px] text-[#8E8E93] truncate">
@@ -290,10 +290,10 @@ export function HomeClient({ data }: { data: HomeData }) {
         </div>
 
         {/* Compliance quota */}
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="font-semibold">Compliance quota</div>
-            <div className="text-xs text-[#6E6E73] flex items-center gap-1">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] flex items-center gap-1">
               {complianceQuota.sk_number ?? "All SK"}
               <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5.5 7l4.5 4.5L14.5 7z" />
@@ -302,7 +302,7 @@ export function HomeClient({ data }: { data: HomeData }) {
           </div>
 
           {complianceQuota.allocation === 0 ? (
-            <div className="text-xs text-[#6E6E73] text-center py-8">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] text-center py-8">
               Belum ada SK aktif.
             </div>
           ) : (
@@ -312,7 +312,7 @@ export function HomeClient({ data }: { data: HomeData }) {
                   <span className="text-3xl font-semibold">
                     {complianceQuota.utilization.toFixed(0)}%
                   </span>
-                  <span className="text-xs text-[#6E6E73]">Utilized</span>
+                  <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">Utilized</span>
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-semibold">
@@ -358,7 +358,7 @@ export function HomeClient({ data }: { data: HomeData }) {
         </div>
 
         {/* Quick links */}
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="font-semibold mb-4">Quick links</div>
           <div className="grid grid-cols-4 gap-2">
             <QuickLink href="/orders/new" label="New Order" icon="file" />
@@ -390,14 +390,14 @@ function KpiCard({
   dotColor: string;
 }) {
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
       <div className="text-4xl font-semibold leading-none">{value}</div>
       <div className="mt-3 flex items-center gap-2">
         <span
           className="w-2 h-2 rounded-full"
           style={{ backgroundColor: dotColor }}
         />
-        <span className="text-sm text-[#1D1D1F]">{label}</span>
+        <span className="text-sm text-[#1D1D1F] dark:text-[#F5F5F7]">{label}</span>
       </div>
       <div className="mt-1 text-[10px] text-[#8E8E93] pl-4">{hint}</div>
     </div>
@@ -407,8 +407,8 @@ function KpiCard({
 function TodayRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[#6E6E73]">{label}</span>
-      <span className="font-medium text-[#1D1D1F]">{value}</span>
+      <span className="text-[#6E6E73] dark:text-[#8E8E93]">{label}</span>
+      <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">{value}</span>
     </div>
   );
 }
@@ -450,10 +450,10 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex flex-col items-center justify-center gap-2 py-3 rounded-lg hover:bg-[#F2F2F4] transition"
+      className="flex flex-col items-center justify-center gap-2 py-3 rounded-lg hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E] transition"
     >
-      <div className="w-6 h-6 text-[#1D1D1F]">{icons[icon]}</div>
-      <div className="text-[10px] text-center text-[#6E6E73] leading-tight">
+      <div className="w-6 h-6 text-[#1D1D1F] dark:text-[#F5F5F7]">{icons[icon]}</div>
+      <div className="text-[10px] text-center text-[#6E6E73] dark:text-[#8E8E93] leading-tight">
         {label}
       </div>
     </Link>

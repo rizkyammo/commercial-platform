@@ -203,7 +203,7 @@ export function BastTab({
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">BAST</h2>
-          <p className="text-sm text-[#6E6E73]">
+          <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Berita Acara Serah Terima — wajib lampirkan scan dokumen.
           </p>
         </div>
@@ -224,7 +224,7 @@ export function BastTab({
       )}
 
       {basts.length === 0 ? (
-        <div className="text-sm text-[#6E6E73] text-center py-10 bg-white border border-[#E5E5EA] rounded-xl">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
           {!canCreate
             ? "BAST hanya dapat dibuat setelah barang dikirim dan diterima."
             : !hasCreate
@@ -232,7 +232,7 @@ export function BastTab({
               : "Belum ada BAST. Klik + New BAST."}
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           <Table>
             <THead>
               <TR>
@@ -390,7 +390,7 @@ export function BastTab({
 
           <FormField label="File Scan BAST" required>
             {form.signed_document_path ? (
-              <div className="flex items-center justify-between border border-[#E5E5EA] rounded-lg px-3 py-2 bg-[#F6F6F7]">
+              <div className="flex items-center justify-between border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-2 bg-[#F6F6F7]">
                 <div className="flex items-center gap-2 text-sm truncate">
                   <span>📎</span>
                   <span className="truncate">
@@ -418,7 +418,7 @@ export function BastTab({
                 </div>
               </div>
             ) : (
-              <div className="border border-dashed border-[#E5E5EA] rounded-lg p-4 text-center">
+              <div className="border border-dashed border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-4 text-center">
                 <input
                   ref={fileRef}
                   type="file"
@@ -431,7 +431,7 @@ export function BastTab({
                   htmlFor="bast-file"
                   className="cursor-pointer inline-block"
                 >
-                  <div className="text-sm text-[#6E6E73]">
+                  <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
                     {uploading
                       ? "Mengunggah..."
                       : "Klik untuk upload file scan BAST"}

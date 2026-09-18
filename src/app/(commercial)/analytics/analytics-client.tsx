@@ -131,7 +131,7 @@ export function AnalyticsClient({
     <div className="space-y-5">
       {/* ============================ TIME CONTROL ============================ */}
       <div className="flex items-center justify-end gap-2 flex-wrap">
-        <div className="flex bg-white border border-[#E5E5EA] rounded-lg p-1">
+        <div className="flex bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-1">
           {(["daily", "monthly", "yearly"] as const).map((p) => {
             const active = range.preset === p;
             return (
@@ -141,7 +141,7 @@ export function AnalyticsClient({
                 className={`h-8 px-3 rounded-md text-xs capitalize transition ${
                   active
                     ? "bg-[#0A84FF] text-white font-medium"
-                    : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                    : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                 }`}
               >
                 {p}
@@ -152,10 +152,10 @@ export function AnalyticsClient({
 
         <button
           onClick={() => setShowCustom(!showCustom)}
-          className={`h-9 px-4 rounded-lg bg-white border border-[#E5E5EA] text-sm flex items-center gap-2 transition ${
+          className={`h-9 px-4 rounded-lg bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] text-sm flex items-center gap-2 transition ${
             range.preset === "custom"
               ? "border-[#0A84FF] text-[#0A84FF]"
-              : "text-[#1D1D1F] hover:border-[#0A84FF]"
+              : "text-[#1D1D1F] dark:text-[#F5F5F7] hover:border-[#0A84FF]"
           }`}
         >
           <span className="font-mono text-xs">
@@ -166,13 +166,13 @@ export function AnalyticsClient({
           </svg>
         </button>
 
-        <button className="h-9 px-4 rounded-lg bg-white border border-[#E5E5EA] text-sm text-[#1D1D1F] hover:border-[#0A84FF]">
+        <button className="h-9 px-4 rounded-lg bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] text-sm text-[#1D1D1F] dark:text-[#F5F5F7] hover:border-[#0A84FF]">
           All Customers
         </button>
-        <button className="h-9 px-4 rounded-lg bg-white border border-[#E5E5EA] text-sm text-[#1D1D1F] hover:border-[#0A84FF]">
+        <button className="h-9 px-4 rounded-lg bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] text-sm text-[#1D1D1F] dark:text-[#F5F5F7] hover:border-[#0A84FF]">
           All Sites
         </button>
-        <button className="h-9 px-4 rounded-lg bg-white border border-[#E5E5EA] text-sm text-[#1D1D1F] hover:border-[#0A84FF] flex items-center gap-2">
+        <button className="h-9 px-4 rounded-lg bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] text-sm text-[#1D1D1F] dark:text-[#F5F5F7] hover:border-[#0A84FF] flex items-center gap-2">
           <svg
             className="w-4 h-4"
             viewBox="0 0 20 20"
@@ -188,14 +188,14 @@ export function AnalyticsClient({
       </div>
 
       {showCustom && (
-        <div className="flex items-center gap-2 justify-end flex-wrap bg-white border border-[#E5E5EA] rounded-xl p-3">
+        <div className="flex items-center gap-2 justify-end flex-wrap bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-3">
           <Input
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
             className="max-w-[160px]"
           />
-          <span className="text-xs text-[#6E6E73]">→</span>
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">→</span>
           <Input
             type="date"
             value={customTo}
@@ -270,7 +270,7 @@ export function AnalyticsClient({
 
       {/* ============================ ROW 1: Trend | Stage | Customer ============================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-5 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-5 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="text-sm font-semibold mb-4">
             Order Value & Margin Trend
           </div>
@@ -334,7 +334,7 @@ export function AnalyticsClient({
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-center gap-5 mt-2 text-xs text-[#6E6E73]">
+          <div className="flex items-center justify-center gap-5 mt-2 text-xs text-[#6E6E73] dark:text-[#8E8E93]">
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#D6E6FB]" />
               Order Value
@@ -346,7 +346,7 @@ export function AnalyticsClient({
           </div>
         </div>
 
-        <div className="lg:col-span-3 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-3 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="text-sm font-semibold mb-4">Orders by Stage</div>
           <div style={{ width: "100%", height: 200 }}>
             <ResponsiveContainer>
@@ -386,15 +386,15 @@ export function AnalyticsClient({
                       backgroundColor: STAGE_COLORS[s.stage] ?? "#C7C7CC",
                     }}
                   />
-                  <span className="text-[#1D1D1F]">{s.stage}</span>
+                  <span className="text-[#1D1D1F] dark:text-[#F5F5F7]">{s.stage}</span>
                 </span>
-                <span className="font-medium text-[#6E6E73]">{s.count}</span>
+                <span className="font-medium text-[#6E6E73] dark:text-[#8E8E93]">{s.count}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-semibold">Orders by Customer</div>
             <Link
@@ -406,7 +406,7 @@ export function AnalyticsClient({
           </div>
           <div className="space-y-3">
             {ordersByCustomer.length === 0 ? (
-              <div className="text-xs text-[#6E6E73] text-center py-6">
+              <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] text-center py-6">
                 Belum ada data.
               </div>
             ) : (
@@ -421,7 +421,7 @@ export function AnalyticsClient({
                     key={c.name}
                     className="flex items-center gap-3 text-xs"
                   >
-                    <span className="w-16 text-[#6E6E73] truncate">
+                    <span className="w-16 text-[#6E6E73] dark:text-[#8E8E93] truncate">
                       {c.name}
                     </span>
                     <div className="flex-1 h-2 bg-[#F2F2F4] rounded-full overflow-hidden">
@@ -430,7 +430,7 @@ export function AnalyticsClient({
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="w-6 text-right font-medium text-[#1D1D1F]">
+                    <span className="w-6 text-right font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
                       {c.count}
                     </span>
                   </div>
@@ -443,7 +443,7 @@ export function AnalyticsClient({
 
       {/* ============================ ROW 2: Site | Product | Cycle Time ============================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-semibold">Margin by Site</div>
             <Link
@@ -468,7 +468,7 @@ export function AnalyticsClient({
                 <tr>
                   <td
                     colSpan={5}
-                    className="text-center text-[#6E6E73] py-4"
+                    className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-4"
                   >
                     Belum ada data.
                   </td>
@@ -498,7 +498,7 @@ export function AnalyticsClient({
           </table>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-semibold">Margin by Product</div>
             <Link
@@ -521,7 +521,7 @@ export function AnalyticsClient({
                 <tr>
                   <td
                     colSpan={3}
-                    className="text-center text-[#6E6E73] py-4"
+                    className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-4"
                   >
                     Belum ada data.
                   </td>
@@ -548,7 +548,7 @@ export function AnalyticsClient({
           </table>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="text-sm font-semibold mb-3">
             Cycle Time (Average)
           </div>
@@ -579,7 +579,7 @@ export function AnalyticsClient({
 
       {/* ============================ ROW 3: Compliance | Issues | Insights ============================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-semibold">Compliance Overview</div>
             <Link
@@ -614,7 +614,7 @@ export function AnalyticsClient({
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-[#6E6E73]">Utilization</div>
+            <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">Utilization</div>
             <div className="text-lg font-semibold">
               {compliance.utilization.toFixed(0)}%
             </div>
@@ -642,11 +642,11 @@ export function AnalyticsClient({
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="text-sm font-semibold mb-3">Top Issues</div>
           <div className="space-y-3 text-xs">
             {topIssues.length === 0 ? (
-              <div className="text-[#6E6E73] py-4 text-center">
+              <div className="text-[#6E6E73] dark:text-[#8E8E93] py-4 text-center">
                 Tidak ada issue. Semua aman ✅
               </div>
             ) : (
@@ -661,15 +661,15 @@ export function AnalyticsClient({
                           : "bg-[#8E8E93]"
                     }`}
                   />
-                  <span className="flex-1 text-[#1D1D1F]">{i.label}</span>
-                  <span className="font-medium text-[#6E6E73]">{i.count}</span>
+                  <span className="flex-1 text-[#1D1D1F] dark:text-[#F5F5F7]">{i.label}</span>
+                  <span className="font-medium text-[#6E6E73] dark:text-[#8E8E93]">{i.count}</span>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <svg
               className="w-4 h-4 text-[#0A84FF]"
@@ -682,7 +682,7 @@ export function AnalyticsClient({
           </div>
           <div className="space-y-3 text-xs">
             {quickInsights.length === 0 ? (
-              <div className="text-[#6E6E73] py-4 text-center">
+              <div className="text-[#6E6E73] dark:text-[#8E8E93] py-4 text-center">
                 Belum ada insight untuk periode ini.
               </div>
             ) : (
@@ -695,7 +695,7 @@ export function AnalyticsClient({
                   >
                     <path d="M10 1l2.39 4.84L18 6.71l-4 3.9L15 16l-5-2.63L5 16l1-5.39-4-3.9 5.61-.87L10 1z" />
                   </svg>
-                  <span className="text-[#1D1D1F] leading-relaxed">
+                  <span className="text-[#1D1D1F] dark:text-[#F5F5F7] leading-relaxed">
                     {insight}
                   </span>
                 </div>
@@ -742,7 +742,7 @@ function KpiCard({
           ? "text-[#FF9500]"
           : tone === "red"
             ? "text-[#FF3B30]"
-            : "text-[#1D1D1F]";
+            : "text-[#1D1D1F] dark:text-[#F5F5F7]";
 
   let arrow: "↑" | "↓" | null = null;
   let colorClass = "";
@@ -767,12 +767,12 @@ function KpiCard({
   }
 
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-4">
-      <div className="text-xs text-[#6E6E73]">{label}</div>
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4">
+      <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">{label}</div>
       <div className="mt-2 flex items-baseline gap-2 flex-wrap">
         <div className={`text-xl font-semibold ${valueColor}`}>{value}</div>
         {extra && (
-          <div className="text-xs text-[#6E6E73] font-medium">{extra}</div>
+          <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] font-medium">{extra}</div>
         )}
       </div>
       {hint && (
@@ -807,9 +807,9 @@ function CycleRow({
   const isGood = delta <= 0;
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[#6E6E73]">{label}</span>
+      <span className="text-[#6E6E73] dark:text-[#8E8E93]">{label}</span>
       <div className="flex items-center gap-3">
-        <span className="font-medium text-[#1D1D1F]">{fmtDays}</span>
+        <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">{fmtDays}</span>
         {deltaAbs > 0.05 && (
           <span
             className={`flex items-center gap-0.5 text-[10px] ${

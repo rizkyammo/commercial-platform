@@ -138,8 +138,8 @@ export function SitesClient({
 
   return (
     <>
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <form onSubmit={submitSearch} className="flex flex-1 gap-2 flex-wrap">
             <Input name="q" defaultValue={q} placeholder="Search by code or name..." className="max-w-sm" />
             <Select name="customer" defaultValue={customerId} className="max-w-[220px]">
@@ -167,15 +167,15 @@ export function SitesClient({
           </THead>
           <TBody>
             {rows.length === 0 && (
-              <TR><TD colSpan={7} className="text-center text-[#6E6E73] py-10">No sites found.</TD></TR>
+              <TR><TD colSpan={7} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">No sites found.</TD></TR>
             )}
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD className="font-mono text-xs">{r.code}</TD>
                 <TD className="font-medium">{r.name}</TD>
-                <TD className="text-[#6E6E73]">{r.customers?.name ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.customers?.name ?? "—"}</TD>
                 <TD>{r.business_model ?? "—"}</TD>
-                <TD className="text-xs text-[#6E6E73]">
+                <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                   {r.latitude !== null && r.longitude !== null
                     ? `${Number(r.latitude).toFixed(4)}, ${Number(r.longitude).toFixed(4)}`
                     : "—"}

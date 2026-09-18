@@ -104,7 +104,7 @@ brandSubtitle = "Commercial Intelligence & Control Platform",
   return (
     <div
       ref={ref}
-      className="pdf-report bg-white text-[#1D1D1F]"
+      className="pdf-report bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7]"
       style={{
         fontFamily:
           "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",

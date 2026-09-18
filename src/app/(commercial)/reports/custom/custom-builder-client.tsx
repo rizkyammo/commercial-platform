@@ -121,19 +121,19 @@ export function CustomBuilderClient({
   return (
     <div className="space-y-4">
       {/* FILTERS */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
         <div className="text-sm font-semibold mb-4">Filters</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">From</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">From</label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">To</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">To</label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">Customer</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">Customer</label>
             <Select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
               <option value="">All Customers</option>
               {filters.customers.map((c) => (
@@ -144,7 +144,7 @@ export function CustomBuilderClient({
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">Site</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">Site</label>
             <Select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
               <option value="">All Sites</option>
               {filters.sites.map((s) => (
@@ -155,7 +155,7 @@ export function CustomBuilderClient({
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">Contract</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">Contract</label>
             <Select value={contractId} onChange={(e) => setContractId(e.target.value)}>
               <option value="">All Contracts</option>
               {filters.contracts.map((c) => (
@@ -166,7 +166,7 @@ export function CustomBuilderClient({
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#6E6E73] mb-1">Status</label>
+            <label className="block text-xs text-[#6E6E73] dark:text-[#8E8E93] mb-1">Status</label>
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="all">All</option>
               <option value="DRAFT">Draft</option>
@@ -183,7 +183,7 @@ export function CustomBuilderClient({
       </div>
 
       {/* FIELDS */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
         <div className="text-sm font-semibold mb-4">
           Fields ({selectedFields.length} selected)
         </div>
@@ -197,7 +197,7 @@ export function CustomBuilderClient({
                 className={`text-xs px-3 py-1.5 rounded-full border transition ${
                   active
                     ? "bg-[#EAF2FB] border-[#0A84FF] text-[#0A84FF]"
-                    : "bg-white border-[#E5E5EA] text-[#6E6E73] hover:border-[#0A84FF]"
+                    : "bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] text-[#6E6E73] dark:text-[#8E8E93] hover:border-[#0A84FF]"
                 }`}
               >
                 {f.replace(/_/g, " ")}
@@ -231,8 +231,8 @@ export function CustomBuilderClient({
 
       {/* PREVIEW */}
       {rows.length > 0 && (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-x-auto">
-          <div className="px-6 py-3 border-b border-[#E5E5EA] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-x-auto">
+          <div className="px-6 py-3 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
             <div className="text-sm font-semibold">
               Preview · {rows.length} rows
             </div>
@@ -268,7 +268,7 @@ export function CustomBuilderClient({
             </TBody>
           </Table>
           {rows.length > 100 && (
-            <div className="px-6 py-3 text-xs text-[#6E6E73] border-t border-[#E5E5EA]">
+            <div className="px-6 py-3 text-xs text-[#6E6E73] dark:text-[#8E8E93] border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
               Showing first 100 rows. Export XLSX untuk data lengkap.
             </div>
           )}

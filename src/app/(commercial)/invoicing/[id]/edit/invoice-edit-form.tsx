@@ -127,13 +127,13 @@ export function InvoiceEditForm({
     <div>
       <Link
         href={`/invoicing/${invoice.id}`}
-        className="text-sm text-[#6E6E73] hover:text-[#1D1D1F]"
+        className="text-sm text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
       >
         ← Back to Invoice
       </Link>
 
       <h1 className="mt-2 text-2xl font-semibold">Edit Invoice</h1>
-      <p className="text-sm text-[#6E6E73]">{invoice.invoice_number}</p>
+      <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">{invoice.invoice_number}</p>
 
       <div className="mt-4 text-xs text-[#A15C00] bg-[#FF9500]/10 border border-[#FF9500]/30 rounded-lg px-3 py-2">
         Setelah disimpan, invoice akan di-reset ke status <strong>DRAFT</strong>{" "}
@@ -141,7 +141,7 @@ export function InvoiceEditForm({
       </div>
 
       <form onSubmit={onSubmit} className="mt-4 space-y-4">
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-6 space-y-4">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Invoice Type">
               <Select
@@ -210,7 +210,7 @@ export function InvoiceEditForm({
           </div>
         </div>
 
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-6 space-y-3">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="text-sm font-medium">Items</div>
             <div className="flex gap-2">
@@ -322,20 +322,20 @@ export function InvoiceEditForm({
           <div className="flex justify-end">
             <div className="text-sm space-y-1">
               <div className="flex justify-between gap-6">
-                <span className="text-[#6E6E73]">DPP:</span>
+                <span className="text-[#6E6E73] dark:text-[#8E8E93]">DPP:</span>
                 <span className="font-mono">
                   {form.currency} {total.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between gap-6">
-                <span className="text-[#6E6E73]">
+                <span className="text-[#6E6E73] dark:text-[#8E8E93]">
                   Tax ({form.tax_rate}%):
                 </span>
                 <span className="font-mono">
                   {form.currency} {tax.toLocaleString("id-ID")}
                 </span>
               </div>
-              <div className="flex justify-between gap-6 border-t border-[#E5E5EA] pt-1">
+              <div className="flex justify-between gap-6 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-1">
                 <span className="font-medium">Total:</span>
                 <span className="font-mono font-medium">
                   {form.currency} {totalWithTax.toLocaleString("id-ID")}
@@ -345,7 +345,7 @@ export function InvoiceEditForm({
           </div>
         </div>
 
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
           <FormField label="Notes">
             <Textarea
               rows={3}

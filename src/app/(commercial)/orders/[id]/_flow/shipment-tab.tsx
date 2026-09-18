@@ -223,7 +223,7 @@ export function ShipmentTab({
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">Shipment</h2>
-          <p className="text-sm text-[#6E6E73]">
+          <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Catat pengiriman ke lokasi customer.
           </p>
         </div>
@@ -259,7 +259,7 @@ export function ShipmentTab({
                   {missingItems.map((i) => (
                     <li
                       key={i.product_id}
-                      className="flex items-center justify-between bg-white/60 rounded px-2 py-1"
+                      className="flex items-center justify-between bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E]/60 rounded px-2 py-1"
                     >
                       <span className="truncate">• {i.product_name}</span>
                       <span className="font-mono">
@@ -309,7 +309,7 @@ export function ShipmentTab({
 
       {/* LIST */}
       {shipments.length === 0 ? (
-        <div className="text-sm text-[#6E6E73] text-center py-10 bg-white border border-[#E5E5EA] rounded-xl">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
           {orderFinished
             ? "Order sudah selesai. Tidak ada shipment baru yang dapat dibuat."
             : !readyForShipment
@@ -321,7 +321,7 @@ export function ShipmentTab({
                 : "Belum ada shipment. Klik + New Shipment."}
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           <Table>
             <THead>
               <TR>
@@ -493,7 +493,7 @@ export function ShipmentTab({
               </Button>
             </div>
             {draftItems.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-6 border border-dashed border-[#E5E5EA] rounded-lg">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-6 border border-dashed border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg">
                 Belum ada item.
               </div>
             ) : (

@@ -215,7 +215,7 @@ export function ReportsClient() {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* SIDEBAR */}
       <aside className="lg:col-span-1">
-        <div className="bg-white border border-[#E5E5EA] rounded-xl p-4 sticky top-24">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4 sticky top-24">
           <div className="space-y-1">
             {CATEGORIES.map((c) => {
               const active = activeCat === c.key;
@@ -226,7 +226,7 @@ export function ReportsClient() {
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-3 ${
                     active
                       ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
-                      : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                      : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                   }`}
                 >
                   <span>{c.label}</span>
@@ -246,8 +246,8 @@ export function ReportsClient() {
 
       {/* CONTENT */}
       <div className="lg:col-span-3 space-y-4">
-        <div className="bg-white border border-[#E5E5EA] rounded-xl">
-          <div className="px-6 py-4 border-b border-[#E5E5EA]">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+          <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
             <h2 className="font-semibold">
               {CATEGORIES.find((c) => c.key === activeCat)?.label ?? "Reports"}
             </h2>
@@ -265,7 +265,7 @@ export function ReportsClient() {
                       {r.category}
                     </Badge>
                   </div>
-                  <div className="text-xs text-[#6E6E73] mt-0.5">
+                  <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">
                     {r.description}
                   </div>
                 </div>

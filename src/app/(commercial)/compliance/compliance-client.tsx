@@ -80,7 +80,7 @@ export function ComplianceClient({
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-sm text-[#6E6E73]">
+          <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Belum ada SK Kemhan aktif
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -95,12 +95,12 @@ export function ComplianceClient({
           </div>
         </div>
 
-        <div className="bg-white border border-dashed border-[#E5E5EA] rounded-xl p-10 text-center">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-dashed border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-10 text-center">
           <div className="text-4xl mb-3">📋</div>
           <h2 className="text-lg font-semibold">
             Belum ada SK Kemhan aktif
           </h2>
-          <p className="mt-1 text-sm text-[#6E6E73] max-w-md mx-auto">
+          <p className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93] max-w-md mx-auto">
             Buat authorization baru untuk mulai mengalokasikan quota material.
             Setelah SK dibuat dan diaktifkan, order dapat di-issue.
           </p>
@@ -134,9 +134,9 @@ export function ComplianceClient({
     <div className="space-y-6">
       {/* TOP ACTION BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="text-sm text-[#6E6E73]">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
           SK aktif:{" "}
-          <span className="font-medium text-[#1D1D1F]">
+          <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
             {activeSk.sk_number}
           </span>
         </div>
@@ -153,7 +153,7 @@ export function ComplianceClient({
       </div>
 
       {/* ACTIVE SK CARD */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -168,7 +168,7 @@ export function ComplianceClient({
                 <Badge tone="orange">Expires in {daysToExpiry}d</Badge>
               )}
             </div>
-            <div className="mt-1 text-sm text-[#6E6E73]">
+            <div className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
               {activeSk.issuing_authority}
             </div>
             <div className="mt-1 text-xs text-[#8E8E93]">
@@ -227,7 +227,7 @@ export function ComplianceClient({
       {/* TOTALS BY UOM */}
       {totalsByUom.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-3">
             Totals by Unit of Measure
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -239,8 +239,8 @@ export function ComplianceClient({
       )}
 
       {/* TABS */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="px-2 border-b border-[#E5E5EA] flex overflow-x-auto">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="px-2 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex overflow-x-auto">
           {[
             { key: "quota" as const, label: "Quota by Material" },
             { key: "ledger" as const, label: "Quota Ledger" },
@@ -255,7 +255,7 @@ export function ComplianceClient({
               className={`h-11 px-4 text-sm border-b-2 -mb-px whitespace-nowrap ${
                 tab === t.key
                   ? "border-[#0A84FF] text-[#0A84FF] font-medium"
-                  : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"
+                  : "border-transparent text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
               }`}
             >
               {t.label}
@@ -267,7 +267,7 @@ export function ComplianceClient({
           {/* QUOTA TAB */}
           {tab === "quota" &&
             (lines.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-10">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
                 Belum ada quota line. Buka{" "}
                 <Link
                   href={`/compliance/sk/${activeSk.id}`}
@@ -328,7 +328,7 @@ export function ComplianceClient({
           {/* LEDGER TAB */}
           {tab === "ledger" &&
             (recentLedger.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-10">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
                 Belum ada aktivitas.
               </div>
             ) : (
@@ -345,7 +345,7 @@ export function ComplianceClient({
                 <TBody>
                   {recentLedger.map((e) => (
                     <TR key={e.id}>
-                      <TD className="text-xs text-[#6E6E73] whitespace-nowrap">
+                      <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93] whitespace-nowrap">
                         {new Date(e.created_at).toLocaleString("id-ID")}
                       </TD>
                       <TD>
@@ -366,7 +366,7 @@ export function ComplianceClient({
                         {Number(e.qty) > 0 ? "+" : ""}
                         {formatNum(e.qty)}
                       </TD>
-                      <TD className="text-xs text-[#6E6E73]">
+                      <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                         {e.reason ?? "—"}
                       </TD>
                     </TR>
@@ -378,7 +378,7 @@ export function ComplianceClient({
           {/* ALERTS TAB */}
           {tab === "alerts" &&
             (alerts.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-10">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
                 Tidak ada alert. Semua aman. ✅
               </div>
             ) : (
@@ -430,8 +430,8 @@ function KpiCard({
             ? "text-[#FF3B30]"
             : "text-[#8E8E93]";
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-4">
-      <div className="text-xs text-[#6E6E73] uppercase tracking-wide">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4">
+      <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
         {label}
       </div>
       <div className="mt-2 text-2xl font-semibold truncate">{value}</div>
@@ -457,7 +457,7 @@ function UomCard({ data }: { data: TotalsByUom }) {
     data.allocation > 0 ? (data.committed / data.allocation) * 100 : 0;
 
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-5">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold">Total ({data.uom})</div>
         <Badge tone="blue">{data.uom}</Badge>
@@ -487,7 +487,7 @@ function UomCard({ data }: { data: TotalsByUom }) {
 
       <div className="mt-4">
         <div className="flex items-center justify-between text-xs mb-1">
-          <span className="text-[#6E6E73]">Utilization</span>
+          <span className="text-[#6E6E73] dark:text-[#8E8E93]">Utilization</span>
           <span className="font-medium">{pct.toFixed(0)}%</span>
         </div>
         <div className="w-full h-2 bg-[#F2F2F4] rounded-full overflow-hidden flex">
@@ -502,7 +502,7 @@ function UomCard({ data }: { data: TotalsByUom }) {
             title={`Committed ${committedPct.toFixed(0)}%`}
           />
         </div>
-        <div className="flex gap-3 mt-2 text-[10px] text-[#6E6E73]">
+        <div className="flex gap-3 mt-2 text-[10px] text-[#6E6E73] dark:text-[#8E8E93]">
           <span className="flex items-center gap-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#34C759]" />
             Realized
@@ -537,10 +537,10 @@ function MiniStat({
         ? "text-[#0A84FF]"
         : tone === "orange"
           ? "text-[#FF9500]"
-          : "text-[#1D1D1F]";
+          : "text-[#1D1D1F] dark:text-[#F5F5F7]";
   return (
     <div>
-      <div className="text-[10px] text-[#6E6E73] uppercase tracking-wide">
+      <div className="text-[10px] text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
         {label}
       </div>
       <div className={`mt-0.5 font-mono text-sm ${color}`}>{value}</div>

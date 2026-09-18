@@ -112,8 +112,8 @@ export function ContractsClient({
 
   return (
     <>
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <form onSubmit={submitSearch} className="flex flex-1 gap-2">
             <Input name="q" defaultValue={q} placeholder="Search by code, name, or contract number..." className="max-w-sm" />
             <Button type="submit" variant="secondary">Search</Button>
@@ -125,14 +125,14 @@ export function ContractsClient({
             <TR><TH>Code</TH><TH>Name</TH><TH>Customer</TH><TH>Site</TH><TH>Period</TH><TH>Status</TH><TH></TH></TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <TR><TD colSpan={7} className="text-center text-[#6E6E73] py-10">No contracts found.</TD></TR>}
+            {rows.length === 0 && <TR><TD colSpan={7} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">No contracts found.</TD></TR>}
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD className="font-mono text-xs">{r.code}</TD>
                 <TD className="font-medium">{r.name}</TD>
                 <TD>{r.customers?.name ?? "—"}</TD>
                 <TD>{r.sites?.name ?? "—"}</TD>
-                <TD className="text-xs text-[#6E6E73]">
+                <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                   {r.start_date ?? "—"} → {r.end_date ?? "—"}
                 </TD>
                 <TD><Badge tone="blue">{r.status}</Badge></TD>
@@ -162,7 +162,7 @@ export function ContractsClient({
       >
         <form id="contract-form" onSubmit={onSubmit} className="space-y-6">
           <div>
-            <h3 className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wide mb-3">Contract</h3>
+            <h3 className="text-xs font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-3">Contract</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField label="Code" required><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} required /></FormField>
               <FormField label="Name" required><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></FormField>
@@ -200,7 +200,7 @@ export function ContractsClient({
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wide mb-3">Business Rules</h3>
+            <h3 className="text-xs font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-3">Business Rules</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField label="Fulfillment Model">
                 <Select value={form.fulfillment_model} onChange={(e) => setForm({ ...form, fulfillment_model: e.target.value as ContractInput["fulfillment_model"] })}>

@@ -317,7 +317,7 @@ export function InvoiceTab({
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">Invoicing</h2>
-          <p className="text-sm text-[#6E6E73]">
+          <p className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Outstanding hanya dari invoice yang sudah terbit.
           </p>
         </div>
@@ -338,14 +338,14 @@ export function InvoiceTab({
       {/* BUSINESS MODEL BILLING INFO */}
       <div className="mb-4 bg-[#EAF2FB] border border-[#0A84FF]/30 rounded-xl p-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-[#6E6E73]">Business Model:</span>
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">Business Model:</span>
           <span className="text-sm font-medium">{businessModel}</span>
           <span className="text-xs text-[#8E8E93] mx-1">→</span>
-          <span className="text-xs text-[#6E6E73]">Default Billing:</span>
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">Default Billing:</span>
           <Badge tone="blue">{defaultType}</Badge>
         </div>
         {billingInfo && (
-          <div className="mt-2 text-xs text-[#6E6E73]">
+          <div className="mt-2 text-xs text-[#6E6E73] dark:text-[#8E8E93]">
             {billingInfo.description} ·{" "}
             <span className="text-[#0A84FF]">
               Auto trigger: {billingInfo.autoTrigger}
@@ -355,16 +355,16 @@ export function InvoiceTab({
       </div>
 
       {/* ============================ PROGRESS ============================ */}
-      <div className="mb-4 bg-white border border-[#E5E5EA] rounded-xl p-5">
+      <div className="mb-4 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <div>
             <div className="text-sm font-semibold">Invoicing Progress</div>
-            <div className="text-xs text-[#6E6E73] mt-0.5">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">
               Outstanding = Issued − Paid · Uninvoiced = Order Value − Issued
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-[#6E6E73] uppercase tracking-wide">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
               Outstanding
             </div>
             <div className="text-lg font-semibold text-[#FF3B30]">
@@ -376,7 +376,7 @@ export function InvoiceTab({
         {/* Stacked progress bar */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-[#6E6E73]">
+            <span className="text-[#6E6E73] dark:text-[#8E8E93]">
               Composition vs Order Value ({fmt(selling, summary.currency)})
             </span>
             <span className="font-medium">{pctPaid.toFixed(1)}% paid</span>
@@ -398,7 +398,7 @@ export function InvoiceTab({
               title={`Uninvoiced ${pctUninvoiced.toFixed(1)}%`}
             />
           </div>
-          <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73] flex-wrap">
+          <div className="flex gap-4 mt-2 text-[10px] text-[#6E6E73] dark:text-[#8E8E93] flex-wrap">
             <span className="flex items-center gap-1">
               <span className="inline-block w-2 h-2 rounded-full bg-[#34C759]" />
               Paid ({fmt(totalPaid, summary.currency)})
@@ -462,11 +462,11 @@ export function InvoiceTab({
               {fmt(uninvoiced, summary.currency)}
             </div>
           </div>
-          <div className="bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg px-3 py-2">
-            <div className="text-[10px] text-[#6E6E73] uppercase tracking-wide">
+          <div className="bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-2">
+            <div className="text-[10px] text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
               Draft invoices (belum terbit)
             </div>
-            <div className="text-sm font-mono font-medium text-[#6E6E73] mt-0.5">
+            <div className="text-sm font-mono font-medium text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">
               {fmt(draftAmount, summary.currency)} ·{" "}
               {draftInvoices.length} invoice
             </div>
@@ -480,7 +480,7 @@ export function InvoiceTab({
           </div>
         )}
 
-        <div className="mt-4 text-xs text-[#6E6E73] bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg px-3 py-2">
+        <div className="mt-4 text-xs text-[#6E6E73] dark:text-[#8E8E93] bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-2">
           <strong>Outstanding</strong> mencakup hanya invoice yang sudah
           diterbitkan (ISSUED/SENT/PARTIAL_PAID/OVERDUE). Invoice DRAFT
           dihitung sebagai <strong>uninvoiced</strong> karena belum menagih
@@ -496,13 +496,13 @@ export function InvoiceTab({
 
       {/* ============================ INVOICE LIST ============================ */}
       {invoices.length === 0 ? (
-        <div className="text-sm text-[#6E6E73] text-center py-10 bg-white border border-[#E5E5EA] rounded-xl">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
           {!canCreateNow
             ? "Belum ada invoice."
             : "Belum ada invoice. Klik + New Invoice."}
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden">
           <Table>
             <THead>
               <TR>
@@ -740,7 +740,7 @@ export function InvoiceTab({
               </div>
             </div>
             {draftLines.length === 0 ? (
-              <div className="text-sm text-[#6E6E73] text-center py-6 border border-dashed border-[#E5E5EA] rounded-lg">
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-6 border border-dashed border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg">
                 Belum ada item.
               </div>
             ) : (
@@ -836,20 +836,20 @@ export function InvoiceTab({
             <div className="mt-3 flex justify-end">
               <div className="text-sm space-y-1">
                 <div className="flex justify-between gap-6">
-                  <span className="text-[#6E6E73]">DPP:</span>
+                  <span className="text-[#6E6E73] dark:text-[#8E8E93]">DPP:</span>
                   <span className="font-mono">
                     {form.currency} {draftTotal.toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="flex justify-between gap-6">
-                  <span className="text-[#6E6E73]">
+                  <span className="text-[#6E6E73] dark:text-[#8E8E93]">
                     Tax ({form.tax_rate}%):
                   </span>
                   <span className="font-mono">
                     {form.currency} {draftTax.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="flex justify-between gap-6 border-t border-[#E5E5EA] pt-1">
+                <div className="flex justify-between gap-6 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-1">
                   <span className="font-medium">Total:</span>
                   <span className="font-mono font-medium">
                     {form.currency} {draftTotalWithTax.toLocaleString("id-ID")}
@@ -898,10 +898,10 @@ function MiniStat({
         ? "text-[#34C759]"
         : tone === "red"
           ? "text-[#FF3B30]"
-          : "text-[#1D1D1F]";
+          : "text-[#1D1D1F] dark:text-[#F5F5F7]";
   return (
-    <div className="bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg p-3">
-      <div className="text-[10px] text-[#6E6E73] uppercase tracking-wide">
+    <div className="bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-3">
+      <div className="text-[10px] text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide">
         {label}
       </div>
       <div className={`mt-1 font-mono text-sm font-medium ${color}`}>

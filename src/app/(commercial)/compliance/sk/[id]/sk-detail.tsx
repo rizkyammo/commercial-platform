@@ -176,7 +176,7 @@ export function SkDetail({
       <div>
         <Link
           href="/compliance"
-          className="text-sm text-[#6E6E73] hover:text-[#1D1D1F]"
+          className="text-sm text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
         >
           ← Compliance
         </Link>
@@ -186,7 +186,7 @@ export function SkDetail({
               <h1 className="text-2xl font-semibold">{sk.sk_number}</h1>
               <Badge tone={skTone(sk.status)}>{sk.status}</Badge>
             </div>
-            <p className="mt-1 text-sm text-[#6E6E73]">
+            <p className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
               {sk.issuing_authority}
             </p>
           </div>
@@ -260,8 +260,8 @@ export function SkDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* DETAILS */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Details
             </h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -281,8 +281,8 @@ export function SkDetail({
           </div>
 
           {/* QUOTA BY MATERIAL */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
               <div>
                 <h2 className="font-semibold">Quota by Material</h2>
                 <p className="text-xs text-[#8E8E93] mt-0.5">
@@ -297,7 +297,7 @@ export function SkDetail({
             </div>
 
             {lines.length === 0 ? (
-              <div className="p-6 text-sm text-[#6E6E73] text-center">
+              <div className="p-6 text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center">
                 {canEdit
                   ? "Belum ada material dialokasikan. Klik + Add Material."
                   : "Belum ada material yang dialokasikan."}
@@ -374,7 +374,7 @@ export function SkDetail({
                 </Table>
 
                 {/* Totals footer */}
-                <div className="px-6 py-3 border-t border-[#E5E5EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="px-6 py-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <TotalItem
                     label="Total Allocation"
                     value={formatNum(totalAllocation)}
@@ -404,8 +404,8 @@ export function SkDetail({
 
         {/* SIDEBAR */}
         <aside className="space-y-6">
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6 h-fit">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 h-fit">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Metadata
             </h2>
             <dl className="space-y-3 text-sm">
@@ -563,7 +563,7 @@ function Info({
 }) {
   return (
     <div>
-      <dt className="text-[#6E6E73] text-xs uppercase tracking-wide">
+      <dt className="text-[#6E6E73] dark:text-[#8E8E93] text-xs uppercase tracking-wide">
         {label}
       </dt>
       <dd className="mt-1">{value || "—"}</dd>
@@ -585,10 +585,10 @@ function TotalItem({
       ? "text-[#34C759]"
       : tone === "blue"
         ? "text-[#0A84FF]"
-        : "text-[#1D1D1F]";
+        : "text-[#1D1D1F] dark:text-[#F5F5F7]";
   return (
     <div>
-      <div className="text-[#6E6E73] text-[10px] uppercase tracking-wide">
+      <div className="text-[#6E6E73] dark:text-[#8E8E93] text-[10px] uppercase tracking-wide">
         {label}
       </div>
       <div className={`font-mono text-sm mt-0.5 ${color}`}>{value}</div>

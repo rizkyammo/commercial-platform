@@ -224,7 +224,7 @@ export function InvoiceDetail({
           <div className="flex items-center gap-3">
             <Link
               href="/invoicing"
-              className="text-sm text-[#6E6E73] hover:text-[#1D1D1F]"
+              className="text-sm text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
             >
               ← Invoicing
             </Link>
@@ -236,12 +236,12 @@ export function InvoiceDetail({
             <Badge tone={statusTone(invoice.status)}>{invoice.status}</Badge>
             <Badge tone="grey">{invoice.invoice_type}</Badge>
             {invoice.invoice_ref && (
-              <span className="text-sm text-[#6E6E73]">
+              <span className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
                 Ref: {invoice.invoice_ref}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-[#6E6E73]">
+          <p className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             {invoice.customers?.name}
             {invoice.orders && (
               <>
@@ -344,16 +344,16 @@ export function InvoiceDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* ITEMS */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
               <h2 className="font-semibold">Invoice Items</h2>
-              <span className="text-xs text-[#6E6E73]">
+              <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                 {invoice.items.length} item
                 {invoice.items.length === 1 ? "" : "s"}
               </span>
             </div>
             {invoice.items.length === 0 ? (
-              <div className="p-6 text-sm text-[#6E6E73] text-center">
+              <div className="p-6 text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center">
                 Belum ada item.
               </div>
             ) : (
@@ -399,23 +399,23 @@ export function InvoiceDetail({
             )}
 
             {/* Totals footer */}
-            <div className="px-6 py-4 border-t border-[#E5E5EA] flex justify-end">
+            <div className="px-6 py-4 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex justify-end">
               <div className="w-full max-w-xs space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#6E6E73]">DPP:</span>
+                  <span className="text-[#6E6E73] dark:text-[#8E8E93]">DPP:</span>
                   <span className="font-mono">
                     {fmt(Number(invoice.amount), invoice.currency)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#6E6E73]">
+                  <span className="text-[#6E6E73] dark:text-[#8E8E93]">
                     Tax ({invoice.tax_rate}%):
                   </span>
                   <span className="font-mono">
                     {fmt(Number(invoice.tax_amount), invoice.currency)}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-[#E5E5EA] pt-2">
+                <div className="flex justify-between border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
                   <span className="font-medium">Total:</span>
                   <span className="font-mono font-medium">
                     {fmt(Number(invoice.amount_with_tax), invoice.currency)}
@@ -427,7 +427,7 @@ export function InvoiceDetail({
                     {fmt(Number(invoice.paid_amount), invoice.currency)}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-[#E5E5EA] pt-2">
+                <div className="flex justify-between border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
                   <span
                     className={
                       outstanding > 0 ? "text-[#FF3B30] font-medium" : ""
@@ -448,16 +448,16 @@ export function InvoiceDetail({
           </div>
 
           {/* PAYMENTS */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
               <h2 className="font-semibold">Payments</h2>
-              <span className="text-xs text-[#6E6E73]">
+              <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                 {invoice.payments.length} payment
                 {invoice.payments.length === 1 ? "" : "s"}
               </span>
             </div>
             {invoice.payments.length === 0 ? (
-              <div className="p-6 text-sm text-[#6E6E73] text-center">
+              <div className="p-6 text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center">
                 Belum ada payment.
               </div>
             ) : (
@@ -478,7 +478,7 @@ export function InvoiceDetail({
                       <TD className="text-right font-mono text-xs text-[#34C759]">
                         {fmt(Number(p.amount), p.currency)}
                       </TD>
-                      <TD className="text-xs text-[#6E6E73]">
+                      <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                         {p.notes ?? "—"}
                       </TD>
                     </TR>
@@ -489,8 +489,8 @@ export function InvoiceDetail({
           </div>
 
           {invoice.notes && (
-            <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-              <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-2">
+            <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-2">
                 Notes
               </h2>
               <div className="text-sm">{invoice.notes}</div>
@@ -500,8 +500,8 @@ export function InvoiceDetail({
 
         <aside className="space-y-6">
           {/* CUSTOMER */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Bill To
             </h2>
             <div className="text-sm space-y-1">
@@ -514,17 +514,17 @@ export function InvoiceDetail({
                 </div>
               )}
               {invoice.customers?.address && (
-                <div className="text-xs text-[#6E6E73] mt-2">
+                <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-2">
                   {invoice.customers.address}
                 </div>
               )}
               {invoice.customers?.email && (
-                <div className="text-xs text-[#6E6E73]">
+                <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                   {invoice.customers.email}
                 </div>
               )}
               {invoice.customers?.phone && (
-                <div className="text-xs text-[#6E6E73]">
+                <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                   {invoice.customers.phone}
                 </div>
               )}
@@ -532,8 +532,8 @@ export function InvoiceDetail({
           </div>
 
           {/* DATES */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Dates
             </h2>
             <div className="space-y-3 text-sm">
@@ -571,8 +571,8 @@ export function InvoiceDetail({
           </div>
 
           {/* FINANCIAL SUMMARY */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Financial Summary
             </h2>
             <div className="space-y-3 text-sm">
@@ -625,9 +625,9 @@ export function InvoiceDetail({
         }
       >
         <form id="pay-form" onSubmit={submitPayment} className="space-y-4">
-          <div className="text-sm bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg p-3">
+          <div className="text-sm bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-3">
             <div className="flex justify-between">
-              <span className="text-[#6E6E73]">Outstanding:</span>
+              <span className="text-[#6E6E73] dark:text-[#8E8E93]">Outstanding:</span>
               <span className="font-mono font-medium">
                 {fmt(outstanding, invoice.currency)}
               </span>
@@ -737,7 +737,7 @@ export function InvoiceDetail({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[#6E6E73] shrink-0">{label}</span>
+      <span className="text-[#6E6E73] dark:text-[#8E8E93] shrink-0">{label}</span>
       <span className="font-medium text-right truncate">{value}</span>
     </div>
   );

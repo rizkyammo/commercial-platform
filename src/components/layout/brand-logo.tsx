@@ -18,7 +18,7 @@ export function BrandLogo({
       className={`font-semibold tracking-tight ${sizes[size]} inline-flex items-center gap-0.5`}
     >
       <span className="text-[#0A84FF]">Ammo</span>
-      <span className="text-[#1D1D1F]">Biz</span>
+      <span className="text-[#1D1D1F] dark:text-[#F5F5F7]">Biz</span>
     </Link>
   );
 }

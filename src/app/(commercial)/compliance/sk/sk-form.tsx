@@ -37,7 +37,7 @@ export function SkForm() {
   }
 
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-6 max-w-3xl">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 max-w-3xl">
       <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField label="SK Number" required>
           <Input value={form.sk_number} onChange={(e) => setForm({ ...form, sk_number: e.target.value })} placeholder="SK/002/2026" required />

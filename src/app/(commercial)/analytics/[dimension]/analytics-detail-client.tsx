@@ -134,7 +134,7 @@ export function AnalyticsDetailClient({
         </Link>
 
         <div className="flex gap-2 items-center flex-wrap">
-          <div className="flex bg-white border border-[#E5E5EA] rounded-lg p-1">
+          <div className="flex bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-1">
             {(["daily", "monthly", "yearly", "all"] as const).map((p) => {
               const active = preset === p;
               return (
@@ -148,7 +148,7 @@ export function AnalyticsDetailClient({
                   className={`h-8 px-3 rounded-md text-xs capitalize ${
                     active
                       ? "bg-[#0A84FF] text-white font-medium"
-                      : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                      : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                   }`}
                 >
                   {p === "all" ? "All" : p}
@@ -160,7 +160,7 @@ export function AnalyticsDetailClient({
               className={`h-8 px-3 rounded-md text-xs ${
                 preset === "custom"
                   ? "bg-[#0A84FF] text-white font-medium"
-                  : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                  : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
               }`}
             >
               Custom
@@ -179,14 +179,14 @@ export function AnalyticsDetailClient({
       </div>
 
       {showCustom && (
-        <div className="flex items-center gap-2 flex-wrap bg-white border border-[#E5E5EA] rounded-xl p-3">
+        <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-3">
           <Input
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
             className="max-w-[160px]"
           />
-          <span className="text-xs text-[#6E6E73]">→</span>
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">→</span>
           <Input
             type="date"
             value={customTo}
@@ -206,15 +206,15 @@ export function AnalyticsDetailClient({
       )}
 
       {/* SUMMARY ROW */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl px-5 py-3 text-sm text-[#6E6E73]">
-        <span className="font-medium text-[#1D1D1F]">{rows.length}</span> rows ·
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl px-5 py-3 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
+        <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">{rows.length}</span> rows ·
         Generated {new Date().toLocaleString("id-ID")}
       </div>
 
       {/* TABLE */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl overflow-x-auto">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-x-auto">
         {rows.length === 0 ? (
-          <div className="p-10 text-center text-sm text-[#6E6E73]">
+          <div className="p-10 text-center text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             Belum ada data untuk periode ini.
           </div>
         ) : (

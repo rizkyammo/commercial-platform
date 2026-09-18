@@ -76,7 +76,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="h-9 w-9 rounded-lg hover:bg-[#F2F2F4] flex items-center justify-center relative"
+        className="h-9 w-9 rounded-lg hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E] flex items-center justify-center relative"
         aria-label="Notifications"
       >
         <Bell className="w-4 h-4" />
@@ -88,8 +88,8 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-[380px] max-h-[560px] bg-white border border-[#E5E5EA] rounded-xl shadow-lg overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-[#E5E5EA] flex items-center justify-between">
+        <div className="absolute right-0 top-12 w-[380px] max-h-[560px] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl shadow-lg overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
             <div className="font-semibold">Notifications</div>
             {unread > 0 && (
               <button onClick={onMarkAll} className="text-xs text-[#0A84FF] hover:underline">
@@ -99,15 +99,15 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
           </div>
 
           <div className="overflow-y-auto flex-1">
-            {loading && <div className="p-6 text-sm text-center text-[#6E6E73]">Loading...</div>}
+            {loading && <div className="p-6 text-sm text-center text-[#6E6E73] dark:text-[#8E8E93]">Loading...</div>}
             {!loading && items.length === 0 && (
-              <div className="p-6 text-sm text-center text-[#6E6E73]">Tidak ada notifikasi.</div>
+              <div className="p-6 text-sm text-center text-[#6E6E73] dark:text-[#8E8E93]">Tidak ada notifikasi.</div>
             )}
             {items.map((n) => (
               <button
                 key={n.id}
                 onClick={() => onOpenItem(n)}
-                className={`w-full text-left px-4 py-3 border-b border-[#E5E5EA] last:border-0 hover:bg-[#F6F6F7] transition ${!n.is_read ? "bg-[#EAF2FB]/40" : ""}`}
+                className={`w-full text-left px-4 py-3 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] dark:border-[#2C2C2E] last:border-0 hover:bg-[#F6F6F7] dark:hover:bg-[#2C2C2E] transition ${!n.is_read ? "bg-[#EAF2FB]/40 dark:bg-[#0A84FF]/10" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <span
@@ -123,7 +123,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium">{n.title}</div>
-                    {n.message && <div className="text-xs text-[#6E6E73] mt-0.5">{n.message}</div>}
+                    {n.message && <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] mt-0.5">{n.message}</div>}
                     <div className="text-[11px] text-[#8E8E93] mt-1">
                       {new Date(n.created_at).toLocaleString("id-ID")}
                     </div>

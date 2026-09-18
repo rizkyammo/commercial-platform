@@ -29,8 +29,8 @@ export default async function CustomerDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">Basic Information</h2>
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">Basic Information</h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <Info label="Code" value={customer.code} />
               <Info label="Name" value={customer.name} />
@@ -46,20 +46,20 @@ export default async function CustomerDetailPage({
             </dl>
           </div>
 
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
               <h2 className="font-semibold">Sites</h2>
-              <span className="text-sm text-[#6E6E73]">{sites.length} total</span>
+              <span className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">{sites.length} total</span>
             </div>
             {sites.length === 0 ? (
-              <div className="p-6 text-sm text-[#6E6E73]">No sites linked yet.</div>
+              <div className="p-6 text-sm text-[#6E6E73] dark:text-[#8E8E93]">No sites linked yet.</div>
             ) : (
               <ul className="divide-y divide-[#E5E5EA]">
                 {sites.map((s) => (
                   <li key={s.id} className="px-6 py-3 flex items-center justify-between text-sm">
                     <div>
                       <div className="font-medium">{s.name}</div>
-                      <div className="text-[#6E6E73] font-mono text-xs">{s.code}</div>
+                      <div className="text-[#6E6E73] dark:text-[#8E8E93] font-mono text-xs">{s.code}</div>
                     </div>
                     <Badge tone={s.is_active ? "green" : "grey"}>{s.is_active ? "Active" : "Inactive"}</Badge>
                   </li>
@@ -68,20 +68,20 @@ export default async function CustomerDetailPage({
             )}
           </div>
 
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-6 py-4 border-b border-[#E5E5EA] flex items-center justify-between">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-6 py-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex items-center justify-between">
               <h2 className="font-semibold">Contracts</h2>
-              <span className="text-sm text-[#6E6E73]">{contracts.length} total</span>
+              <span className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">{contracts.length} total</span>
             </div>
             {contracts.length === 0 ? (
-              <div className="p-6 text-sm text-[#6E6E73]">No contracts linked yet.</div>
+              <div className="p-6 text-sm text-[#6E6E73] dark:text-[#8E8E93]">No contracts linked yet.</div>
             ) : (
               <ul className="divide-y divide-[#E5E5EA]">
                 {contracts.map((c) => (
                   <li key={c.id} className="px-6 py-3 flex items-center justify-between text-sm">
                     <div>
                       <div className="font-medium">{c.name}</div>
-                      <div className="text-[#6E6E73] font-mono text-xs">{c.code}</div>
+                      <div className="text-[#6E6E73] dark:text-[#8E8E93] font-mono text-xs">{c.code}</div>
                     </div>
                     <Badge tone="blue">{c.status}</Badge>
                   </li>
@@ -91,8 +91,8 @@ export default async function CustomerDetailPage({
           </div>
         </div>
 
-        <aside className="bg-white border border-[#E5E5EA] rounded-xl p-6 h-fit">
-          <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">Status</h2>
+        <aside className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6 h-fit">
+          <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">Status</h2>
           <Badge tone={customer.is_active ? "green" : "grey"}>
             {customer.is_active ? "Active" : "Inactive"}
           </Badge>
@@ -108,7 +108,7 @@ export default async function CustomerDetailPage({
 function Info({ label, value, className = "" }: { label: string; value: unknown; className?: string }) {
   return (
     <div className={className}>
-      <dt className="text-[#6E6E73]">{label}</dt>
+      <dt className="text-[#6E6E73] dark:text-[#8E8E93]">{label}</dt>
       <dd className="mt-0.5">{value ? String(value) : "—"}</dd>
     </div>
   );

@@ -229,10 +229,10 @@ export function FlowClient({
             <button
               key={s.key}
               onClick={() => selectStage(s.key)}
-              className={`text-left bg-white border rounded-xl p-3 transition hover:border-[#0A84FF] ${
+              className={`text-left bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border rounded-xl p-3 transition hover:border-[#0A84FF] ${
                 isActive
                   ? "border-[#0A84FF] ring-2 ring-[#0A84FF]/10"
-                  : "border-[#E5E5EA]"
+                  : "border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]"
               }`}
             >
               <div
@@ -244,7 +244,7 @@ export function FlowClient({
                   style={{ backgroundColor: s.color }}
                 />
               </div>
-              <div className="text-[10px] text-[#6E6E73] uppercase tracking-wide truncate">
+              <div className="text-[10px] text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide truncate">
                 {s.label}
               </div>
               <div className="mt-0.5 text-xl font-semibold">{count}</div>
@@ -254,8 +254,8 @@ export function FlowClient({
       </div>
 
       {/* STATUS SUMMARY */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-4">
-        <div className="text-xs text-[#6E6E73] uppercase tracking-wide mb-3">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4">
+        <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-3">
           Order Status Breakdown
         </div>
         <div className="flex gap-3 flex-wrap">
@@ -264,9 +264,9 @@ export function FlowClient({
             .map(([status, count]) => (
               <div
                 key={status}
-                className="flex items-center gap-2 bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg px-3 py-1.5"
+                className="flex items-center gap-2 bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-1.5"
               >
-                <span className="text-xs text-[#6E6E73]">{status}</span>
+                <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">{status}</span>
                 <span className="text-sm font-semibold">{count}</span>
               </div>
             ))}
@@ -274,9 +274,9 @@ export function FlowClient({
       </div>
 
       {/* TABLE CONTAINER */}
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
         {/* STAGE TABS */}
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col gap-3">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col gap-3">
           <div className="-mx-1 overflow-x-auto pb-1">
             <div className="flex gap-1 min-w-max px-1">
               {STAGES.map((s) => {
@@ -288,7 +288,7 @@ export function FlowClient({
                     className={`h-9 px-3 rounded-lg text-sm whitespace-nowrap shrink-0 flex items-center gap-2 ${
                       isActive
                         ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
-                        : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                        : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                     }`}
                   >
                     <span>{s.label}</span>
@@ -319,7 +319,7 @@ export function FlowClient({
                     className={`h-8 px-3 rounded-md text-xs ${
                       isActive
                         ? "bg-[#1D1D1F] text-white font-medium"
-                        : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                        : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                     }`}
                   >
                     {v.label}
@@ -359,7 +359,7 @@ export function FlowClient({
           <TBody>
             {rows.length === 0 ? (
               <TR>
-                <TD colSpan={8} className="text-center text-[#6E6E73] py-10">
+                <TD colSpan={8} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">
                   {activeStage === "all" && activeView === "all"
                     ? "Belum ada order."
                     : "Tidak ada order yang cocok dengan filter."}
@@ -382,10 +382,10 @@ export function FlowClient({
                         {o.po_number ?? "No PO"}
                       </div>
                     </TD>
-                    <TD className="text-[#6E6E73] text-sm">
+                    <TD className="text-[#6E6E73] dark:text-[#8E8E93] text-sm">
                       {o.customers?.name ?? "—"}
                     </TD>
-                    <TD className="text-[#6E6E73] text-sm">
+                    <TD className="text-[#6E6E73] dark:text-[#8E8E93] text-sm">
                       {o.sites?.name ?? "—"}
                     </TD>
                     <TD>
@@ -417,7 +417,7 @@ export function FlowClient({
                                 ? "text-[#34C759]"
                                 : action.tone === "red"
                                   ? "text-[#FF3B30]"
-                                  : "text-[#6E6E73]"
+                                  : "text-[#6E6E73] dark:text-[#8E8E93]"
                         }`}
                       >
                         {action.text} →

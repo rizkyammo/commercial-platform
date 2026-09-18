@@ -1,4 +1,7 @@
+@import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-surface: #FFFFFF;
@@ -17,6 +20,15 @@
 
 html, body {
   font-family: var(--font-sans);
+}
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.2s ease;
+}
+
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button { cursor: pointer; }

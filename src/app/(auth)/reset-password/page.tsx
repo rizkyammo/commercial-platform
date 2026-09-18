@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <h1 className="text-3xl font-semibold">Reset Password</h1>
-      <p className="mt-2 text-[#6E6E73]">Masukkan password baru Anda.</p>
+      <p className="mt-2 text-[#6E6E73] dark:text-[#8E8E93]">Masukkan password baru Anda.</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <div>
@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] focus:outline-none focus:border-[#0A84FF]"
+            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] focus:outline-none focus:border-[#0A84FF]"
           />
         </div>
         <div>
@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] focus:outline-none focus:border-[#0A84FF]"
+            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] focus:outline-none focus:border-[#0A84FF]"
           />
         </div>
 

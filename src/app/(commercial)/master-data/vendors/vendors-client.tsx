@@ -62,8 +62,8 @@ export function VendorsClient({ rows, total, page, totalPages, q }: { rows: Row[
 
   return (
     <>
-      <div className="bg-white border border-[#E5E5EA] rounded-xl">
-        <div className="p-4 border-b border-[#E5E5EA] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+        <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <form onSubmit={submitSearch} className="flex flex-1 gap-2">
             <Input name="q" defaultValue={q} placeholder="Search by code, name, or email..." className="max-w-sm" />
             <Button type="submit" variant="secondary">Search</Button>
@@ -75,14 +75,14 @@ export function VendorsClient({ rows, total, page, totalPages, q }: { rows: Row[
             <TR><TH>Code</TH><TH>Name</TH><TH>Type</TH><TH>Contact</TH><TH>Email</TH><TH>Status</TH><TH></TH></TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <TR><TD colSpan={7} className="text-center text-[#6E6E73] py-10">No vendors found.</TD></TR>}
+            {rows.length === 0 && <TR><TD colSpan={7} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">No vendors found.</TD></TR>}
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD className="font-mono text-xs">{r.code}</TD>
                 <TD className="font-medium">{r.name}</TD>
                 <TD>{r.type ?? "—"}</TD>
                 <TD>{r.contact_person ?? "—"}</TD>
-                <TD className="text-[#6E6E73]">{r.email ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.email ?? "—"}</TD>
                 <TD><Badge tone={r.is_active ? "green" : "grey"}>{r.is_active ? "Active" : "Inactive"}</Badge></TD>
                 <TD className="text-right">
                   <div className="flex gap-2 justify-end">

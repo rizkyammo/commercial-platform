@@ -614,7 +614,7 @@ export function OrderDetail({
           <div className="flex items-center gap-3">
             <Link
               href="/orders"
-              className="text-sm text-[#6E6E73] hover:text-[#1D1D1F]"
+              className="text-sm text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
             >
               ← Orders
             </Link>
@@ -622,11 +622,11 @@ export function OrderDetail({
           <div className="mt-2 flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-semibold">{order.order_number}</h1>
             <Badge tone={display.tone}>{display.label}</Badge>
-            <span className="text-sm text-[#6E6E73]">
+            <span className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">
               {order.po_number ?? "No PO"}
             </span>
           </div>
-          <p className="mt-1 text-sm text-[#6E6E73]">
+          <p className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             {order.customers?.name} · {order.sites?.name} ·{" "}
             <span className="text-[#0A84FF]">{order.business_model}</span>
           </p>
@@ -760,7 +760,7 @@ export function OrderDetail({
 
       {/* PENDING APPROVALS */}
       {pendingApprovals.length > 0 && (
-        <div className="mb-6 bg-white border border-[#E5E5EA] rounded-xl p-4">
+        <div className="mb-6 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4">
           <div className="font-medium mb-2 text-sm">
             Pending Approval Requests
           </div>
@@ -768,11 +768,11 @@ export function OrderDetail({
             {pendingApprovals.map((a) => (
               <li
                 key={a.id}
-                className="flex items-center justify-between text-sm border border-[#E5E5EA] rounded-lg px-3 py-2 flex-wrap gap-2"
+                className="flex items-center justify-between text-sm border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-2 flex-wrap gap-2"
               >
                 <div>
                   <span className="font-medium">{a.type}</span>
-                  <span className="text-[#6E6E73]"> · {a.reason}</span>
+                  <span className="text-[#6E6E73] dark:text-[#8E8E93]"> · {a.reason}</span>
                   <div className="text-xs text-[#8E8E93] mt-0.5">
                     Diminta {new Date(a.requested_at).toLocaleString("id-ID")}
                   </div>
@@ -813,8 +813,8 @@ export function OrderDetail({
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-[#E5E5EA] rounded-xl">
-            <div className="px-2 border-b border-[#E5E5EA] flex overflow-x-auto">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+            <div className="px-2 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex overflow-x-auto">
               {TABS.map((t) => (
                 <button
                   key={t.key}
@@ -822,7 +822,7 @@ export function OrderDetail({
                   className={`h-11 px-4 text-sm border-b-2 -mb-px transition whitespace-nowrap flex items-center gap-2 ${
                     tab === t.key
                       ? "border-[#0A84FF] text-[#0A84FF] font-medium"
-                      : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"
+                      : "border-transparent text-[#6E6E73] dark:text-[#8E8E93] hover:text-[#1D1D1F] dark:text-[#F5F5F7]"
                   }`}
                 >
                   <span>{t.label}</span>
@@ -831,7 +831,7 @@ export function OrderDetail({
                       className={`text-[10px] px-1.5 rounded-full ${
                         tab === t.key
                           ? "bg-[#0A84FF]/15 text-[#0A84FF]"
-                          : "bg-[#F2F2F4] text-[#6E6E73]"
+                          : "bg-[#F2F2F4] text-[#6E6E73] dark:text-[#8E8E93]"
                       }`}
                     >
                       {t.badge}
@@ -951,8 +951,8 @@ export function OrderDetail({
           <BusinessModelCard model={order.business_model} />
 
           {/* MARGIN BREAKDOWN */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Margin Breakdown
             </h2>
 <MarginBreakdown
@@ -967,8 +967,8 @@ export function OrderDetail({
 
           {/* INVOICING SUMMARY */}
           {invoiceSummary.invoiceCount > 0 && (
-            <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-              <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+            <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
                 Invoicing
               </h2>
               <div className="space-y-3 text-sm">
@@ -1014,8 +1014,8 @@ export function OrderDetail({
           )}
 
           {/* SUMMARY */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Summary
             </h2>
             <div className="space-y-3 text-sm">
@@ -1044,8 +1044,8 @@ export function OrderDetail({
           </div>
 
           {/* COMPLIANCE */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Compliance
             </h2>
             {compliance?.sk ? (
@@ -1068,13 +1068,13 @@ export function OrderDetail({
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-[#6E6E73]">No active SK</div>
+              <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">No active SK</div>
             )}
           </div>
 
           {/* KEY DATES */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Key Dates
             </h2>
             <div className="space-y-3 text-sm">
@@ -1111,8 +1111,8 @@ export function OrderDetail({
           </div>
 
           {/* FLOW COUNTERS */}
-          <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+          <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
               Flow Counters
             </h2>
             <div className="space-y-3 text-sm">
@@ -1252,7 +1252,7 @@ function getDisplayStatus(order: {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[#6E6E73] shrink-0">{label}</span>
+      <span className="text-[#6E6E73] dark:text-[#8E8E93] shrink-0">{label}</span>
       <span className="font-medium text-right truncate">{value}</span>
     </div>
   );
@@ -1267,7 +1267,7 @@ function Info({
 }) {
   return (
     <div>
-      <div className="text-[#6E6E73] text-xs uppercase tracking-wide">
+      <div className="text-[#6E6E73] dark:text-[#8E8E93] text-xs uppercase tracking-wide">
         {label}
       </div>
       <div className="mt-1">{value || "—"}</div>
@@ -1287,8 +1287,8 @@ function BusinessModelCard({ model }: { model: string }) {
   const info = getBusinessModelInfo(model);
   if (!info) {
     return (
-      <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-2">
+      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-2">
           Business Model
         </h2>
         <div className="text-sm">{model || "—"}</div>
@@ -1297,21 +1297,21 @@ function BusinessModelCard({ model }: { model: string }) {
   }
 
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl p-6">
-      <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-[#6E6E73] dark:text-[#8E8E93] uppercase tracking-wide mb-4">
         Business Model
       </h2>
       <div className="text-base font-semibold text-[#0A84FF]">
         {info.label}
       </div>
-      <p className="mt-2 text-xs text-[#6E6E73] leading-relaxed">
+      <p className="mt-2 text-xs text-[#6E6E73] dark:text-[#8E8E93] leading-relaxed">
         {info.description}
       </p>
-      <div className="mt-3 pt-3 border-t border-[#E5E5EA]">
+      <div className="mt-3 pt-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
         <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide">
           Cocok untuk
         </div>
-        <div className="mt-0.5 text-xs text-[#1D1D1F]">{info.fit}</div>
+        <div className="mt-0.5 text-xs text-[#1D1D1F] dark:text-[#F5F5F7]">{info.fit}</div>
       </div>
     </div>
   );
@@ -1363,26 +1363,26 @@ function MarginBreakdown({
         Before Tax
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">Selling Value (DPP)</span>
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Selling Value (DPP)</span>
         <span className="font-mono text-xs">{fmt(sellingValue)}</span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">Material Cost</span>
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Material Cost</span>
         <span className="font-mono text-xs text-[#FF3B30]">
           − {fmt(materialCost)}
         </span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">Transport Cost</span>
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Transport Cost</span>
         <span className="font-mono text-xs text-[#FF3B30]">
           − {fmt(transportCost)}
         </span>
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
-        <span className="text-[#6E6E73]">Total Direct Cost</span>
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Total Direct Cost</span>
         <span className="font-mono text-xs">{fmt(totalCost)}</span>
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
         <span className="font-medium">Margin Before Tax</span>
         <span
           className={`font-mono text-xs font-medium ${
@@ -1393,7 +1393,7 @@ function MarginBreakdown({
         </span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">Margin %</span>
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Margin %</span>
         <span
           className={`text-xs font-medium ${
             marginPctBefore >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
@@ -1404,17 +1404,17 @@ function MarginBreakdown({
       </div>
 
       {/* ============ TAX SECTION ============ */}
-      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA]">
+      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
         Tax
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">
           PPN Output ({ppnRate}%)
         </span>
         <span className="font-mono text-xs">{fmt(ppnOutput)}</span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">
           PPN Input ({ppnRate}%)
         </span>
         <span className="font-mono text-xs text-[#34C759]">
@@ -1434,14 +1434,14 @@ function MarginBreakdown({
         </span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">
           PPh 23 ({pph23Rate}% × transport)
         </span>
         <span className="font-mono text-xs text-[#FF9500]">
           {fmt(pph23)}
         </span>
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
         <span className="font-medium">Total Tax</span>
         <span className="font-mono text-xs font-medium text-[#FF9500]">
           {fmt(totalTax)}
@@ -1449,10 +1449,10 @@ function MarginBreakdown({
       </div>
 
       {/* ============ AFTER TAX SECTION ============ */}
-      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA]">
+      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
         After Tax
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] pt-2">
         <span className="font-medium">Margin After Tax</span>
         <span
           className={`font-mono text-xs font-medium ${
@@ -1463,7 +1463,7 @@ function MarginBreakdown({
         </span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[#6E6E73]">Margin %</span>
+        <span className="text-[#6E6E73] dark:text-[#8E8E93]">Margin %</span>
         <span
           className={`text-xs font-medium ${
             marginPctAfter >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
@@ -1517,7 +1517,7 @@ function OverviewTab({
         <Info label="Margin" value={`${marginPct.toFixed(2)}%`} />
         {order.remarks && (
           <div className="md:col-span-2">
-            <div className="text-[#6E6E73] text-xs uppercase tracking-wide">
+            <div className="text-[#6E6E73] dark:text-[#8E8E93] text-xs uppercase tracking-wide">
               Remarks
             </div>
             <div className="mt-1">{order.remarks}</div>
@@ -1570,8 +1570,8 @@ function OverviewTab({
           </Select>
         </FormField>
         {draftModelInfo && (
-          <div className="mt-2 text-xs text-[#6E6E73] bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg px-3 py-2 leading-relaxed">
-            <div className="font-medium text-[#1D1D1F] mb-0.5">
+          <div className="mt-2 text-xs text-[#6E6E73] dark:text-[#8E8E93] bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg px-3 py-2 leading-relaxed">
+            <div className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7] mb-0.5">
               {draftModelInfo.label}
             </div>
             <div>{draftModelInfo.description}</div>
@@ -1648,7 +1648,7 @@ function ItemsTab({
   if (!editMode) {
     if (items.length === 0) {
       return (
-        <div className="text-sm text-[#6E6E73] text-center py-10">
+        <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
           Belum ada item.
         </div>
       );
@@ -1821,7 +1821,7 @@ function FlowTab({ order }: { order: Order }) {
         <li key={s.key} className="flex items-center gap-3">
           <span className={`w-2.5 h-2.5 rounded-full ${tone(s.status)}`} />
           <span className="text-sm w-28">{s.label}</span>
-          <span className="text-xs text-[#6E6E73]">
+          <span className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
             {s.status.replace(/_/g, " ")}
           </span>
         </li>
@@ -1839,7 +1839,7 @@ function ComplianceTab({
 }) {
   if (!compliance || !compliance.sk) {
     return (
-      <div className="text-sm text-[#6E6E73] text-center py-10">
+      <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
         Belum ada SK Kemhan aktif. Hubungi Compliance untuk membuat SK terlebih
         dahulu.
       </div>
@@ -1851,7 +1851,7 @@ function ComplianceTab({
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#F6F6F7] border border-[#E5E5EA] rounded-lg p-4">
+      <div className="bg-[#F6F6F7] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-lg p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="text-lg font-semibold">{compliance.sk.sk_number}</div>
           <Badge
@@ -1865,7 +1865,7 @@ function ComplianceTab({
           {order.sk_id && <Badge tone="blue">Linked to this order</Badge>}
         </div>
         {compliance.sk.issuing_authority && (
-          <div className="mt-1 text-sm text-[#6E6E73]">
+          <div className="mt-1 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
             {compliance.sk.issuing_authority}
           </div>
         )}
@@ -1959,7 +1959,7 @@ function ComplianceTab({
 function ActivityTab({ history }: { history: History[] }) {
   if (history.length === 0) {
     return (
-      <div className="text-sm text-[#6E6E73] text-center py-10">
+      <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93] text-center py-10">
         Belum ada aktivitas.
       </div>
     );
@@ -1971,14 +1971,14 @@ function ActivityTab({ history }: { history: History[] }) {
           <span className="mt-1.5 w-2 h-2 rounded-full bg-[#0A84FF] shrink-0" />
           <div className="text-sm">
             <div className="font-medium">{h.action.replace(/_/g, " ")}</div>
-            <div className="text-xs text-[#6E6E73]">
+            <div className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
               {h.from_status && h.from_status !== h.to_status
                 ? `${h.from_status} → `
                 : ""}
               {h.to_status}
             </div>
             {h.reason && (
-              <div className="mt-1 text-xs text-[#6E6E73] italic">
+              <div className="mt-1 text-xs text-[#6E6E73] dark:text-[#8E8E93] italic">
                 "{h.reason}"
               </div>
             )}

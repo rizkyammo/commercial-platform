@@ -30,8 +30,8 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold text-[#1D1D1F]">Welcome Back</h1>
-<p className="mt-2 text-[#6E6E73]">Sign in to your AmmoBiz account</p>
+      <h1 className="text-3xl font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">Welcome Back</h1>
+<p className="mt-2 text-[#6E6E73] dark:text-[#8E8E93]">Sign in to your AmmoBiz account</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <div>
@@ -42,7 +42,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.co.id"
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] bg-white focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
+            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
           />
         </div>
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] bg-white focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
+            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
           />
         </div>
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-[#6E6E73]">
+      <div className="mt-8 text-center text-sm text-[#6E6E73] dark:text-[#8E8E93]">
         Don&apos;t have an account?{" "}
         <span className="text-[#0A84FF]">Contact your administrator</span>
       </div>

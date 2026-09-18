@@ -36,9 +36,9 @@ export default async function MasterDataOverview() {
           <Link
             key={c.key}
             href={c.href}
-            className="bg-white border border-[#E5E5EA] rounded-xl p-5 hover:border-[#0A84FF] transition"
+            className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-5 hover:border-[#0A84FF] transition"
           >
-            <div className="text-sm text-[#6E6E73]">{c.label}</div>
+            <div className="text-sm text-[#6E6E73] dark:text-[#8E8E93]">{c.label}</div>
             <div className="mt-2 text-2xl font-semibold">{c.count}</div>
             <div className="mt-1 text-xs text-[#8E8E93]">Active</div>
           </Link>

@@ -168,8 +168,8 @@ export function OrdersClient({
   );
 
   return (
-    <div className="bg-white border border-[#E5E5EA] rounded-xl">
-      <div className="p-4 border-b border-[#E5E5EA] flex flex-col gap-4">
+    <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl">
+      <div className="p-4 border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] flex flex-col gap-4">
         {/* TAB STRIP — horizontal scroll */}
         <div className="-mx-1 overflow-x-auto pb-1">
           <div className="flex gap-1 min-w-max px-1">
@@ -182,7 +182,7 @@ export function OrdersClient({
                   className={`h-9 px-3 rounded-lg text-sm transition flex items-center gap-2 whitespace-nowrap shrink-0 ${
                     active
                       ? "bg-[#EAF2FB] text-[#0A84FF] font-medium"
-                      : "text-[#6E6E73] hover:bg-[#F2F2F4]"
+                      : "text-[#6E6E73] dark:text-[#8E8E93] hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
                   }`}
                 >
                   <span>{t.label}</span>
@@ -254,7 +254,7 @@ export function OrdersClient({
         <TBody>
           {rows.length === 0 && (
             <TR>
-              <TD colSpan={8} className="text-center text-[#6E6E73] py-10">
+              <TD colSpan={8} className="text-center text-[#6E6E73] dark:text-[#8E8E93] py-10">
                 {hasActiveFilter
                   ? "Tidak ada order yang cocok dengan filter."
                   : "Belum ada order. Klik + New Order untuk membuat."}
@@ -286,8 +286,8 @@ export function OrdersClient({
                     {r.po_number ?? "No PO"}
                   </div>
                 </TD>
-                <TD className="text-[#6E6E73]">{r.customers?.name ?? "—"}</TD>
-                <TD className="text-[#6E6E73]">{r.sites?.name ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.customers?.name ?? "—"}</TD>
+                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.sites?.name ?? "—"}</TD>
                 <TD>{r.business_model}</TD>
                 <TD className="font-mono text-xs">
                   {r.currency} {Number(r.selling_value).toLocaleString("id-ID")}

@@ -28,7 +28,7 @@ export default async function CommercialLayout({
   ]);
 
   return (
-    <div className="min-h-screen bg-[#F6F6F7]">
+    <div className="min-h-screen bg-[#F6F6F7] dark:bg-[#0A0A0A]">
       <TopNav profile={profile} unread={unread ?? 0} />
       <main className="mx-auto max-w-[1440px] px-6 py-8">{children}</main>
     </div>
