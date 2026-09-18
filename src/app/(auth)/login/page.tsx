@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <div>
       <h1 className="text-3xl font-semibold text-[#1D1D1F]">Welcome Back</h1>
-      <p className="mt-2 text-[#6E6E73]">Sign in to your Commercial account</p>
+<p className="mt-2 text-[#6E6E73]">Sign in to your AmmoBiz account</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <div>

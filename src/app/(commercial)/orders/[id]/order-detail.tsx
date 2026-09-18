@@ -89,6 +89,15 @@ type Order = {
   customers?: { id: string; code: string; name: string } | null;
   sites?: { id: string; code: string; name: string } | null;
   contracts?: { id: string; code: string; name: string; currency: string } | null;
+  ppn_rate?: number;
+  pph23_rate?: number;
+  ppn_output?: number;
+  ppn_input?: number;
+  ppn_payable?: number;
+  pph23_amount?: number;
+  total_tax?: number;
+  margin_before_tax?: number;
+  margin_after_tax?: number;
 };
 
 type Item = {
@@ -946,13 +955,14 @@ export function OrderDetail({
             <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wide mb-4">
               Margin Breakdown
             </h2>
-            <MarginBreakdown
-              sellingValue={Number(order.selling_value)}
-              materialCost={totalMaterialCost}
-              transportCost={totalTransportCost}
-              taxRate={Number(order.tax_rate ?? 11)}
-              currency={order.currency}
-            />
+<MarginBreakdown
+  sellingValue={Number(order.selling_value)}
+  materialCost={totalMaterialCost}
+  transportCost={totalTransportCost}
+  ppnRate={Number(order.ppn_rate ?? 11)}
+  pph23Rate={Number(order.pph23_rate ?? 2)}
+  currency={order.currency}
+/>
           </div>
 
           {/* INVOICING SUMMARY */}
@@ -1313,21 +1323,33 @@ function MarginBreakdown({
   sellingValue,
   materialCost,
   transportCost,
-  taxRate,
+  ppnRate = 11,
+  pph23Rate = 2,
   currency,
 }: {
   sellingValue: number;
   materialCost: number;
   transportCost: number;
-  taxRate: number;
+  ppnRate?: number;
+  pph23Rate?: number;
   currency: string;
 }) {
   const totalCost = materialCost + transportCost;
   const marginBefore = sellingValue - totalCost;
   const marginPctBefore =
     sellingValue > 0 ? (marginBefore / sellingValue) * 100 : 0;
-  const taxAmount = (sellingValue * taxRate) / 100;
-  const marginAfter = marginBefore - taxAmount;
+
+  // PPN
+  const ppnOutput = (sellingValue * ppnRate) / 100;
+  const ppnInput = (totalCost * ppnRate) / 100;
+  const ppnPayable = ppnOutput - ppnInput;
+
+  // PPh 23
+  const pph23 = (transportCost * pph23Rate) / 100;
+
+  // Total tax
+  const totalTax = ppnPayable + pph23;
+  const marginAfter = marginBefore - totalTax;
   const marginPctAfter =
     sellingValue > 0 ? (marginAfter / sellingValue) * 100 : 0;
 
@@ -1336,32 +1358,32 @@ function MarginBreakdown({
 
   return (
     <div className="space-y-2 text-sm">
+      {/* ============ BEFORE TAX SECTION ============ */}
+      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold">
+        Before Tax
+      </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-[#6E6E73]">Selling Value (DPP)</span>
         <span className="font-mono text-xs">{fmt(sellingValue)}</span>
       </div>
-
       <div className="flex items-center justify-between gap-3">
         <span className="text-[#6E6E73]">Material Cost</span>
         <span className="font-mono text-xs text-[#FF3B30]">
           − {fmt(materialCost)}
         </span>
       </div>
-
       <div className="flex items-center justify-between gap-3">
         <span className="text-[#6E6E73]">Transport Cost</span>
         <span className="font-mono text-xs text-[#FF3B30]">
           − {fmt(transportCost)}
         </span>
       </div>
-
       <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
         <span className="text-[#6E6E73]">Total Direct Cost</span>
         <span className="font-mono text-xs">{fmt(totalCost)}</span>
       </div>
-
       <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
-        <span className="font-medium">Margin (Before Tax)</span>
+        <span className="font-medium">Margin Before Tax</span>
         <span
           className={`font-mono text-xs font-medium ${
             marginBefore >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
@@ -1381,15 +1403,57 @@ function MarginBreakdown({
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-2">
-        <span className="text-[#6E6E73]">Tax ({taxRate}%)</span>
-        <span className="font-mono text-xs text-[#FF3B30]">
-          − {fmt(taxAmount)}
+      {/* ============ TAX SECTION ============ */}
+      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA]">
+        Tax
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">
+          PPN Output ({ppnRate}%)
+        </span>
+        <span className="font-mono text-xs">{fmt(ppnOutput)}</span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">
+          PPN Input ({ppnRate}%)
+        </span>
+        <span className="font-mono text-xs text-[#34C759]">
+          − {fmt(ppnInput)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-medium text-[#FF9500]">
+          PPN Payable
+        </span>
+        <span
+          className={`font-mono text-xs font-medium ${
+            ppnPayable >= 0 ? "text-[#FF9500]" : "text-[#34C759]"
+          }`}
+        >
+          {fmt(ppnPayable)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[#6E6E73]">
+          PPh 23 ({pph23Rate}% × transport)
+        </span>
+        <span className="font-mono text-xs text-[#FF9500]">
+          {fmt(pph23)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
+        <span className="font-medium">Total Tax</span>
+        <span className="font-mono text-xs font-medium text-[#FF9500]">
+          {fmt(totalTax)}
         </span>
       </div>
 
+      {/* ============ AFTER TAX SECTION ============ */}
+      <div className="text-[10px] text-[#8E8E93] uppercase tracking-wide font-semibold pt-3 mt-3 border-t border-[#E5E5EA]">
+        After Tax
+      </div>
       <div className="flex items-center justify-between gap-3 border-t border-[#E5E5EA] pt-2">
-        <span className="font-medium">Margin (After Tax)</span>
+        <span className="font-medium">Margin After Tax</span>
         <span
           className={`font-mono text-xs font-medium ${
             marginAfter >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"

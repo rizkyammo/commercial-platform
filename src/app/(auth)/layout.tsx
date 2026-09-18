@@ -4,7 +4,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Brand panel */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-[#EAF2FB] via-[#F4F7FB] to-[#EAF2FB]">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">COMMERCIAL</div>
+          <div className="text-2xl font-semibold tracking-tight">
+  <span className="text-[#0A84FF]">Ammo</span>
+  <span className="text-[#1D1D1F]">Biz</span>
+</div>
         </div>
         <div className="max-w-md">
           <h1 className="text-4xl font-semibold leading-tight text-[#1D1D1F]">
