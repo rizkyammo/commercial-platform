@@ -304,16 +304,18 @@ export function AnalyticsClient({
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "1px solid #E5E5EA",
-                    fontSize: 12,
-                  }}
-                  formatter={(v: number, name: string) =>
-                    name === "Margin %" ? `${v.toFixed(1)}%` : fmtRp(v)
-                  }
-                />
+<Tooltip
+  contentStyle={{
+    borderRadius: 8,
+    border: "1px solid #E5E5EA",
+    fontSize: 12,
+  }}
+  formatter={((value: unknown, name: unknown) => {
+    const v = Number(value);
+    const n = String(name);
+    return n === "Margin %" ? `${v.toFixed(1)}%` : fmtRp(v);
+  }) as never}
+/>
                 <Bar
                   yAxisId="left"
                   dataKey="orderValue"

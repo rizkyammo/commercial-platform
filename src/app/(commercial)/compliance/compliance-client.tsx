@@ -123,12 +123,13 @@ export function ComplianceClient({
   }
 
   // ---------- Active SK view ----------
-  const daysToExpiry = activeSk.expiry_date
-    ? Math.ceil(
-        (new Date(activeSk.expiry_date).getTime() - Date.now()) /
-          (1000 * 60 * 60 * 24)
-      )
-    : null;
+const daysToExpiry = (() => {
+  if (!activeSk.expiry_date) return null;
+  const now = new Date().getTime();
+  return Math.ceil(
+    (new Date(activeSk.expiry_date).getTime() - now) / (1000 * 60 * 60 * 24)
+  );
+})();
 
   return (
     <div className="space-y-6">

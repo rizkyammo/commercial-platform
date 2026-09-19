@@ -125,7 +125,7 @@ export function ProfileForm({
           {/* Avatar */}
           <div className="lg:col-span-4 flex flex-col items-center">
             {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img
                 src={profile.avatar_url}
                 alt="Avatar"

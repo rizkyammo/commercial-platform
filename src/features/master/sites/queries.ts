@@ -1,15 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 
 export async function listSites({
-  q, customerId, page, pageSize,
-}: { q?: string; customerId?: string; page: number; pageSize: number }) {
+  q,
+  customerId,
+  page,
+  pageSize,
+}: {
+  q?: string;
+  customerId?: string;
+  page: number;
+  pageSize: number;
+}) {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   let query = supabase
     .from("sites")
-    .select("id, code, name, customer_id, latitude, longitude, province, city, business_model, site_status, is_active, updated_at, customers(name)", { count: "exact" })
+    .select(
+      "id, code, name, customer_id, latitude, longitude, province, city, business_model, site_status, is_active, updated_at, customers(name)",
+      { count: "exact" }
+    )
     .order("updated_at", { ascending: false })
     .range(from, to);
 
@@ -29,4 +40,15 @@ export async function getSite(id: string) {
     .eq("id", id)
     .single();
   return data;
+}
+
+export async function getSitesByCustomerCached(customerId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sites")
+    .select("id, code, name")
+    .eq("customer_id", customerId)
+    .eq("is_active", true)
+    .order("name");
+  return data ?? [];
 }

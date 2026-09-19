@@ -25,7 +25,7 @@ type SiteRow = {
   business_model: string | null;
   site_status: string;
   is_active: boolean;
-  customers?: { name: string } | null;
+  customers?: { name: string }[] | { name: string } | null;
 };
 
 type CustomerOption = { id: string; code: string; name: string };
@@ -173,7 +173,11 @@ export function SitesClient({
               <TR key={r.id}>
                 <TD className="font-mono text-xs">{r.code}</TD>
                 <TD className="font-medium">{r.name}</TD>
-                <TD className="text-[#6E6E73] dark:text-[#8E8E93]">{r.customers?.name ?? "—"}</TD>
+                <TD className="text-[#6E6E73]">
+  {Array.isArray(r.customers)
+    ? r.customers[0]?.name ?? "—"
+    : r.customers?.name ?? "—"}
+</TD>
                 <TD>{r.business_model ?? "—"}</TD>
                 <TD className="text-xs text-[#6E6E73] dark:text-[#8E8E93]">
                   {r.latitude !== null && r.longitude !== null

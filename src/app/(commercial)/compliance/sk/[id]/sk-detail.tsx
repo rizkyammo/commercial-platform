@@ -160,7 +160,11 @@ export function SkDetail({
         return;
       }
       setShowAmend(false);
-      router.push(`/compliance/sk/${r.data.id}`);
+      if (r.data?.id) {
+  router.push(`/compliance/sk/${r.data.id}`);
+} else {
+  setError("Gagal mendapatkan ID SK baru.");
+}
     });
   }
 

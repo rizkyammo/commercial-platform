@@ -140,12 +140,12 @@ export function SpatialClient({
   const [showAddBase, setShowAddBase] = useState(false);
 
   // Site context (nearby prospects, base, margin, orders)
-  const [siteContext, setSiteContext] = useState<{
-    nearbyProspects: Prospect[];
-    nearbyBase: { name: string; distance_km: number } | null;
-    margin: number;
-    activeOrders: number;
-  } | null>(null);
+const [siteContext, setSiteContext] = useState<{
+  nearbyProspects: Prospect[];
+  nearestBase: { name: string; distance_km: number } | null;
+  margin: number;
+  activeOrders: number;
+} | null>(null);
 
 useEffect(() => {
   if (selection?.type !== "site") {
@@ -303,7 +303,7 @@ useEffect(() => {
             <DetailPanel
               selection={selection}
               nearbyProspects={siteContext?.nearbyProspects ?? []}
-              nearbyBase={siteContext?.nearbyBase ?? null}
+              nearbyBase={siteContext?.nearestBase ?? null}
               margin={siteContext?.margin ?? 0}
               activeOrders={siteContext?.activeOrders ?? 0}
               onClose={() => setSelection(null)}

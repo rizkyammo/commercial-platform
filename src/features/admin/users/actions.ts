@@ -224,12 +224,12 @@ export async function getUserDetailAction(userId: string) {
 
   const roles = (userRoles ?? [])
     .map((ur) => {
-      const r = ur.roles as {
-        id: string;
-        name: string;
-        display_name: string;
-        description: string | null;
-      } | null;
+const r = ur.roles as unknown as {
+  id: string;
+  name: string;
+  display_name: string;
+  description: string | null;
+} | null;
       return r;
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
@@ -248,10 +248,10 @@ export async function getUserDetailAction(userId: string) {
     { code: string; description: string | null }
   >();
   for (const rp of rolePerms ?? []) {
-    const p = rp.permissions as {
-      code: string;
-      description: string | null;
-    } | null;
+const p = rp.permissions as unknown as {
+  code: string;
+  description: string | null;
+} | null;
     if (p) permSet.set(p.code, p);
   }
   const permissions = Array.from(permSet.values());

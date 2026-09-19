@@ -31,9 +31,9 @@ export async function createCustomer(input: unknown) {
 
   revalidatePath("/master-data/customers");
   revalidatePath("/master-data");
+  
   return { data };
 }
-
 export async function updateCustomer(id: string, input: unknown) {
   const parsed = customerSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };

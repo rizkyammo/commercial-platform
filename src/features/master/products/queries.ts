@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 
-export async function listProducts({ q, page, pageSize }: { q?: string; page: number; pageSize: number }) {
+export async function listProducts({
+  q,
+  page,
+  pageSize,
+}: {
+  q?: string;
+  page: number;
+  pageSize: number;
+}) {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -20,6 +28,10 @@ export async function listProducts({ q, page, pageSize }: { q?: string; page: nu
 
 export async function listProductsSimple() {
   const supabase = await createClient();
-  const { data } = await supabase.from("products").select("id, code, name, uom").eq("is_active", true).order("name");
+  const { data } = await supabase
+    .from("products")
+    .select("id, code, name, uom")
+    .eq("is_active", true)
+    .order("name");
   return data ?? [];
 }

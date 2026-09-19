@@ -38,7 +38,45 @@ export type HomeData = Awaited<ReturnType<typeof getHomeDashboard>>;
 export async function getHomeDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+
+  // Kalau tidak ada user, return empty data.
+  // Layout sudah redirect ke /login, jadi ini hanya fallback.
+  if (!user) {
+    return {
+      profile: { full_name: "Guest", email: "" },
+      greeting: "Good morning",
+      today: new Date().toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }),
+      unread: 0,
+      kpis: {
+        waitingBast: 0,
+        draftOrders: 0,
+        readyToShip: 0,
+        complianceBlocked: 0,
+      },
+      todayPanel: {
+        poCreated: 0,
+        shipmentConfirmed: 0,
+        bastCompleted: 0,
+        complianceAlert: 0,
+      },
+      nextActions: [],
+      orderProgress: [],
+      complianceQuota: {
+        sk_number: null as string | null,
+        allocation: 0,
+        committed: 0,
+        realized: 0,
+        available: 0,
+        utilization: 0,
+      },
+      recentActivity: [],
+    };
+  }
 
   const [{ data: profile }, { count: unread }] = await Promise.all([
     supabase
@@ -121,80 +159,78 @@ export async function getHomeDashboard() {
     .order("updated_at", { ascending: false })
     .limit(30);
 
-  const nextActions: NextAction[] = (rawOrders ?? [])
-    .map((o) => {
-      const customer = (o.customers as { name?: string } | null)?.name ?? "—";
-      const site = (o.sites as { name?: string } | null)?.name ?? "—";
-      const ref = o.po_number ?? "";
+ const nextActions: NextAction[] = (rawOrders ?? [])
+  .map((o): NextAction | null => {
+    const customer = (o.customers as { name?: string } | null)?.name ?? "—";
+    const site = (o.sites as { name?: string } | null)?.name ?? "—";
 
-      // Determine action based on stage/status
-      if (["DRAFT", "SUBMITTED", "UNDER_REVIEW", "RETURNED"].includes(o.status)) {
-        return {
-          id: o.id,
-          order_number: o.order_number,
-          po_number: o.po_number,
-          customer_name: customer,
-          site_name: site,
-          status: o.status,
-          status_label: labelFor(o.status),
-          due_date: null,
-          action_label: o.status === "DRAFT" ? "Continue" : "Review",
-          action_href: `/orders/${o.id}`,
-          urgency: "normal" as const,
-        };
-      }
-      if (o.status === "APPROVED") {
-        return {
-          id: o.id,
-          order_number: o.order_number,
-          po_number: o.po_number,
-          customer_name: customer,
-          site_name: site,
-          status: "APPROVED",
-          status_label: "Ready to issue",
-          due_date: null,
-          action_label: "Issue Order",
-          action_href: `/orders/${o.id}`,
-          urgency: "today" as const,
-        };
-      }
-      if (o.status === "ISSUED") {
-        return {
-          id: o.id,
-          order_number: o.order_number,
-          po_number: o.po_number,
-          customer_name: customer,
-          site_name: site,
-          status: "ISSUED",
-          status_label: "Procurement",
-          due_date: null,
-          action_label: "Complete Procurement",
-          action_href: `/orders/${o.id}`,
-          urgency: "upcoming" as const,
-        };
-      }
-      if (
-        ["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED"].includes(o.status) &&
-        o.bast_status !== "COMPLETED"
-      ) {
-        return {
-          id: o.id,
-          order_number: o.order_number,
-          po_number: o.po_number,
-          customer_name: customer,
-          site_name: site,
-          status: "WAITING_BAST",
-          status_label: "Waiting BAST",
-          due_date: null,
-          action_label: "Add BAST",
-          action_href: `/orders/${o.id}`,
-          urgency: "overdue" as const,
-        };
-      }
-      return null;
-    })
-    .filter((x): x is NextAction => x !== null)
-    .slice(0, 5);
+    if (["DRAFT", "SUBMITTED", "UNDER_REVIEW", "RETURNED"].includes(o.status)) {
+      return {
+        id: o.id,
+        order_number: o.order_number,
+        po_number: o.po_number,
+        customer_name: customer,
+        site_name: site,
+        status: o.status,
+        status_label: labelFor(o.status),
+        due_date: null,
+        action_label: o.status === "DRAFT" ? "Continue" : "Review",
+        action_href: `/orders/${o.id}`,
+        urgency: "normal",
+      };
+    }
+    if (o.status === "APPROVED") {
+      return {
+        id: o.id,
+        order_number: o.order_number,
+        po_number: o.po_number,
+        customer_name: customer,
+        site_name: site,
+        status: "APPROVED",
+        status_label: "Ready to issue",
+        due_date: null,
+        action_label: "Issue Order",
+        action_href: `/orders/${o.id}`,
+        urgency: "today",
+      };
+    }
+    if (o.status === "ISSUED") {
+      return {
+        id: o.id,
+        order_number: o.order_number,
+        po_number: o.po_number,
+        customer_name: customer,
+        site_name: site,
+        status: "ISSUED",
+        status_label: "Procurement",
+        due_date: null,
+        action_label: "Complete Procurement",
+        action_href: `/orders/${o.id}`,
+        urgency: "upcoming",
+      };
+    }
+    if (
+      ["IN_PROGRESS", "PARTIALLY_FULFILLED", "FULFILLED"].includes(o.status) &&
+      o.bast_status !== "COMPLETED"
+    ) {
+      return {
+        id: o.id,
+        order_number: o.order_number,
+        po_number: o.po_number,
+        customer_name: customer,
+        site_name: site,
+        status: "WAITING_BAST",
+        status_label: "Waiting BAST",
+        due_date: null,
+        action_label: "Add BAST",
+        action_href: `/orders/${o.id}`,
+        urgency: "overdue",
+      };
+    }
+    return null;
+  })
+  .filter((x): x is NextAction => x !== null)
+  .slice(0, 5);
 
   // ============ Order Progress ============
   const { data: allOrders } = await supabase

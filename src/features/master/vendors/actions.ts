@@ -26,7 +26,7 @@ export async function updateVendor(id: string, input: unknown) {
   const { data, error } = await supabase.from("vendors").update({ ...parsed.data, updated_by: user.id }).eq("id", id).select().single();
   if (error) return { error: error.message };
   await writeAudit({ action: "UPDATE", module: "Vendor", resourceType: "vendor", resourceId: id, oldValue: old, newValue: data });
-  revalidatePath("/master-data/vendors");
+  revalidatePath("/master-data/vendors"); 
   return { data };
 }
 export async function deleteVendor(id: string) {

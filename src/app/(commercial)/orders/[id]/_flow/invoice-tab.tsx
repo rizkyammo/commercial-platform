@@ -17,11 +17,7 @@ import {
   issueInvoice,
   deleteInvoice,
 } from "@/features/invoicing/actions";
-import {
-  getDefaultInvoiceType,
-  BILLING_MODELS,
-  type InvoiceType,
-} from "@/lib/constants/billing-models";
+import { BILLING_MODELS, type InvoiceType, getDefaultInvoiceType } from "@/lib/constants/billing-models";
 
 // ============================ TYPES ============================
 
@@ -32,12 +28,12 @@ type Invoice = {
   invoice_type: string;
   invoice_date: string;
   due_date: string | null;
-  payment_term_days: number;
+  payment_term_days?: number;
   currency: string;
-  exchange_rate: number;
-  tax_rate: number;
-  notes: string | null;
-  amount: number;
+  exchange_rate?: number;
+  tax_rate?: number;
+  notes?: string | null;
+  amount?: number;
   amount_with_tax: number;
   paid_amount: number;
   status: string;
@@ -233,16 +229,16 @@ export function InvoiceTab({
 
   function openEdit(inv: Invoice) {
     setEditingId(inv.id);
-    setForm({
-      invoice_ref: inv.invoice_ref ?? "",
-      invoice_type: inv.invoice_type,
-      invoice_date: inv.invoice_date,
-      payment_term_days: inv.payment_term_days,
-      currency: inv.currency,
-      exchange_rate: Number(inv.exchange_rate),
-      tax_rate: Number(inv.tax_rate),
-      notes: inv.notes ?? "",
-    });
+setForm({
+  invoice_ref: inv.invoice_ref ?? "",
+  invoice_type: inv.invoice_type as InvoiceType,
+  invoice_date: inv.invoice_date,
+  payment_term_days: inv.payment_term_days ?? 30,
+  currency: inv.currency,
+  exchange_rate: Number(inv.exchange_rate ?? 1),
+  tax_rate: Number(inv.tax_rate ?? 11),
+  notes: inv.notes ?? "",
+});
     setDraftLines(prefillFromOrder());
     setError(null);
     setOpen(true);
@@ -649,7 +645,7 @@ export function InvoiceTab({
               <Select
                 value={form.invoice_type}
                 onChange={(e) =>
-                  setForm({ ...form, invoice_type: e.target.value })
+                  setForm({ ...form, invoice_type: e.target.value as InvoiceType })
                 }
               >
                 {Object.values(BILLING_MODELS).map((b) => (

@@ -77,7 +77,7 @@ export async function listUsers({
     { id: string; name: string; display_name: string }[]
   >();
   for (const ur of userRoles ?? []) {
-    const r = ur.roles as { id: string; name: string; display_name: string } | null;
+    const r = ur.roles as unknown as { id: string; name: string; display_name: string } | null;
     if (!r) continue;
     const arr = rolesByUser.get(ur.user_id) ?? [];
     arr.push(r);
@@ -119,40 +119,43 @@ export async function getUserStats() {
   const supabase = await createClient();
 
   const [
-    { count: total },
-    { count: active },
-    { count: inactive },
-    { count: roles },
-    { data: depts },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true),
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", false),
-    supabase.from("roles").select("*", { count: "exact", head: true }),
-    supabase
-      .from("organisations")
-      .select("id", { count: "exact", head: true })
-      .eq("type", "department")
-      .eq("is_active", true),
-  ]);
+  { count: total },
+  { count: active },
+  { count: inactive },
+  { count: roles },
+  { count: departments },
+] = await Promise.all([
+  supabase.from("profiles").select("*", { count: "exact", head: true }),
+  supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true),
+  supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", false),
+  supabase.from("roles").select("*", { count: "exact", head: true }),
+  supabase
+    .from("organisations")
+    .select("*", { count: "exact", head: true })
+    .eq("type", "department")
+    .eq("is_active", true),
+]);
 
   return {
     total: total ?? 0,
     active: active ?? 0,
     inactive: inactive ?? 0,
     roles: roles ?? 0,
-    departments: depts ?? 0,
+    departments: departments ?? 0,
   };
 }
 
 // ============================================================
 // REFERENCE DATA
+// ============================================================
+// ============================================================
+// ROLES
 // ============================================================
 export async function listRoles() {
   const supabase = await createClient();
@@ -163,6 +166,9 @@ export async function listRoles() {
   return data ?? [];
 }
 
+// ============================================================
+// PERMISSIONS
+// ============================================================
 export async function listPermissions() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -172,6 +178,9 @@ export async function listPermissions() {
   return data ?? [];
 }
 
+// ============================================================
+// ORG UNITS SIMPLE
+// ============================================================
 export async function listOrgUnitsSimple() {
   const supabase = await createClient();
   const { data } = await supabase

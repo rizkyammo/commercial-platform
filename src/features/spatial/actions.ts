@@ -283,9 +283,9 @@ async function computeScenarioMetrics(
     }
   }
 
-  const newProspects = prospectIds.filter(
-    (p) => !coveredByExisting.has(p)
-  ).length;
+const newProspects = prospectIds.filter(
+  (p: string) => !coveredByExisting.has(p)
+).length;
 
   // Sites in radius (JS-side filter)
   const { data: sites } = await supabase

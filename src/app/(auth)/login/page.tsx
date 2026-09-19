@@ -18,7 +18,11 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -29,28 +33,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">Welcome Back</h1>
-<p className="mt-2 text-[#6E6E73] dark:text-[#8E8E93]">Sign in to your AmmoBiz account</p>
+    <div className="w-full">
+      <h1 className="text-3xl font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+        Welcome Back
+      </h1>
+      <p className="mt-2 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
+        Sign in to your AmmoBiz account
+      </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <div>
-          <label className="block text-sm font-medium mb-2">Email</label>
+          <label className="block text-sm font-medium mb-1.5 text-[#1D1D1F] dark:text-[#F5F5F7]">
+            Email <span className="text-[#FF3B30]">*</span>
+          </label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.co.id"
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
+            autoComplete="email"
+            className="w-full h-12 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] text-base focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
           />
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium">Password</label>
-            <Link href="/forgot-password" className="text-sm text-[#0A84FF] hover:underline">
-              Forgot password?
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
+              Password <span className="text-[#FF3B30]">*</span>
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-[#0A84FF] hover:underline"
+            >
+              Forgot?
             </Link>
           </div>
           <input
@@ -59,12 +75,13 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
-            className="w-full h-11 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
+            autoComplete="current-password"
+            className="w-full h-12 px-3 rounded-lg border border-[#E5E5EA] dark:border-[#2C2C2E] bg-white dark:bg-[#1C1C1E] text-base focus:outline-none focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/10"
           />
         </div>
 
         {error && (
-          <div className="text-sm text-[#FF3B30] bg-[#FF3B30]/5 border border-[#FF3B30]/20 rounded-lg px-3 py-2">
+          <div className="text-sm text-[#FF3B30] bg-[#FF3B30]/5 border border-[#FF3B30]/20 rounded-lg px-3 py-2.5">
             {error}
           </div>
         )}
@@ -72,7 +89,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-lg bg-[#0A84FF] text-white font-medium hover:bg-[#0A84FF]/90 disabled:opacity-50 transition"
+          className="w-full h-12 rounded-lg bg-[#0A84FF] text-white text-base font-medium hover:bg-[#0A84FF]/90 disabled:opacity-50 transition"
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>

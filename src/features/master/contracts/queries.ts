@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 
-export async function listContracts({ q, page, pageSize }: { q?: string; page: number; pageSize: number }) {
+export async function listContracts({
+  q,
+  page,
+  pageSize,
+}: {
+  q?: string;
+  page: number;
+  pageSize: number;
+}) {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -18,7 +26,7 @@ export async function listContracts({ q, page, pageSize }: { q?: string; page: n
   return { data: data ?? [], count: count ?? 0 };
 }
 
-export async function listSitesByCustomer(customerId: string) {
+export async function listSitesByCustomerCached(customerId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("sites")

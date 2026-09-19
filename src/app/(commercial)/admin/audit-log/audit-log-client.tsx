@@ -15,7 +15,7 @@ import type { AuditLog } from "@/features/admin/audit/queries";
 function actionTone(
   a: string
 ): "blue" | "green" | "orange" | "red" | "grey" {
-  const s = a.toLowerCase();
+  const s = String(a ?? "").toLowerCase();
   if (s.includes("delete") || s.includes("cancel")) return "red";
   if (s.includes("create") || s.includes("approve")) return "green";
   if (s.includes("update") || s.includes("edit")) return "blue";
@@ -24,7 +24,37 @@ function actionTone(
 }
 
 function resultTone(r: string): "green" | "red" {
-  return r === "SUCCESS" ? "green" : "red";
+  return String(r ?? "") === "SUCCESS" ? "green" : "red";
+}
+
+/** Convert any unknown value to a display string. */
+function safeString(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (typeof v === "string") return v.length > 0 ? v : "—";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  if (typeof v === "object") {
+    try {
+      return JSON.stringify(v, null, 2);
+    } catch {
+      return String(v);
+    }
+  }
+  return String(v);
+}
+
+/** Safe boolean check for unknown. */
+function hasValue(v: unknown): boolean {
+  if (v === null || v === undefined) return false;
+  if (typeof v === "string") return v.length > 0;
+  if (typeof v === "object") {
+    try {
+      return Object.keys(v as object).length > 0;
+    } catch {
+      return true;
+    }
+  }
+  return true;
 }
 
 // ============================ MAIN ============================
@@ -95,6 +125,13 @@ export function AuditLogClient({
   function resetFilters() {
     router.push(pathname);
   }
+
+  // Precompute display values dari selected
+  const selAction = selected ? safeString(selected.action) : "";
+  const selResult = selected ? safeString(selected.result) : "";
+  const selTimestamp = selected
+    ? new Date(selected.timestamp).toLocaleString("id-ID")
+    : "";
 
   return (
     <div className="space-y-4">
@@ -226,7 +263,9 @@ export function AuditLogClient({
                         {l.actor_name ?? l.actor_email ?? "—"}
                       </TD>
                       <TD onClick={() => setSelected(l)}>
-                        <Badge tone={actionTone(l.action)}>{l.action}</Badge>
+                        <Badge tone={actionTone(l.action)}>
+                          {safeString(l.action)}
+                        </Badge>
                       </TD>
                       <TD
                         className="text-sm text-[#6E6E73]"
@@ -239,11 +278,15 @@ export function AuditLogClient({
                         onClick={() => setSelected(l)}
                       >
                         {l.resource_type
-                          ? `${l.resource_type} ${l.resource_id?.slice(0, 8) ?? ""}`
+                          ? `${l.resource_type} ${
+                              l.resource_id?.slice(0, 8) ?? ""
+                            }`
                           : l.reason ?? "—"}
                       </TD>
                       <TD onClick={() => setSelected(l)}>
-                        <Badge tone={resultTone(l.result)}>{l.result}</Badge>
+                        <Badge tone={resultTone(l.result)}>
+                          {safeString(l.result)}
+                        </Badge>
                       </TD>
                       <TD className="text-right">
                         <button className="text-[#6E6E73] hover:text-[#1D1D1F] px-2">
@@ -280,7 +323,7 @@ export function AuditLogClient({
                 </button>
               </div>
 
-              <div className="p-5 space-y-5">
+              <div className="p-5 space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#EAF2FB] dark:bg-[#0A84FF]/10 flex items-center justify-center shrink-0">
@@ -296,87 +339,104 @@ export function AuditLogClient({
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm">{selected.action}</div>
+                    <div className="font-medium text-sm">{selAction}</div>
                     <div className="text-xs text-[#6E6E73] mt-0.5">
-                      {new Date(selected.timestamp).toLocaleString("id-ID")}
+                      {selTimestamp}
                     </div>
                     <div className="mt-2">
-                      <Badge tone={resultTone(selected.result)}>
-                        {selected.result}
+                      <Badge tone={resultTone(selResult)}>
+                        {selResult}
                       </Badge>
                     </div>
                   </div>
                 </div>
 
-                {/* User Info */}
+                {/* User Information */}
                 <div className="border-t border-[#E5E5EA] dark:border-[#2C2C2E] pt-4">
                   <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wide mb-3">
                     User Information
                   </div>
                   <div className="space-y-2 text-sm">
-                    <DetailRow label="Name" value={selected.actor_name ?? "—"} />
+                    <DetailRow
+                      label="Name"
+                      value={safeString(selected.actor_name)}
+                    />
                     <DetailRow
                       label="Email"
-                      value={selected.actor_email ?? "—"}
+                      value={safeString(selected.actor_email)}
                     />
-                    <DetailRow label="Role" value={selected.actor_role ?? "—"} />
+                    <DetailRow
+                      label="Role"
+                      value={safeString(selected.actor_role)}
+                    />
                   </div>
                 </div>
 
-                {/* Event Info */}
+                {/* Event Information */}
                 <div className="border-t border-[#E5E5EA] dark:border-[#2C2C2E] pt-4">
                   <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wide mb-3">
                     Event Information
                   </div>
                   <div className="space-y-2 text-sm">
-                    <DetailRow label="Module" value={selected.module} />
-                    <DetailRow label="Action" value={selected.action} />
+                    <DetailRow
+                      label="Module"
+                      value={safeString(selected.module)}
+                    />
+                    <DetailRow
+                      label="Action"
+                      value={safeString(selected.action)}
+                    />
                     <DetailRow
                       label="Resource Type"
-                      value={selected.resource_type ?? "—"}
+                      value={safeString(selected.resource_type)}
                     />
                     <DetailRow
                       label="Resource ID"
-                      value={selected.resource_id?.slice(0, 12) ?? "—"}
+                      value={safeString(selected.resource_id).slice(0, 12)}
                       mono
                     />
                     <DetailRow
                       label="Session ID"
-                      value={selected.session_id?.slice(0, 16) ?? "—"}
+                      value={safeString(selected.session_id).slice(0, 16)}
                       mono
                     />
                     <DetailRow
                       label="Request ID"
-                      value={selected.request_id?.slice(0, 16) ?? "—"}
+                      value={safeString(selected.request_id).slice(0, 16)}
                       mono
                     />
                   </div>
                 </div>
 
                 {/* Reason */}
-                {selected.reason && (
+                {hasValue(selected.reason) && (
                   <div className="border-t border-[#E5E5EA] dark:border-[#2C2C2E] pt-4">
                     <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
                       Reason
                     </div>
-                    <div className="text-sm">{selected.reason}</div>
+                    <div className="text-sm">
+                      {safeString(selected.reason)}
+                    </div>
                   </div>
                 )}
 
                 {/* Changes */}
-                {(selected.new_value || selected.old_value) && (
+                {(hasValue(selected.new_value) ||
+                  hasValue(selected.old_value)) && (
                   <div className="border-t border-[#E5E5EA] dark:border-[#2C2C2E] pt-4">
                     <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
                       Changes
                     </div>
-                    <pre className="bg-[#F6F6F7] dark:bg-[#0A0A0A] border border-[#E5E5EA] dark:border-[#2C2C2E] rounded-lg p-3 text-[11px] font-mono overflow-x-auto max-h-[200px]">
-                      {JSON.stringify(
-                        {
-                          before: selected.old_value,
-                          after: selected.new_value,
-                        },
-                        null,
-                        2
+                    <pre className="bg-[#F6F6F7] dark:bg-[#0A0A0A] border border-[#E5E5EA] dark:border-[#2C2C2E] rounded-lg p-3 text-[11px] font-mono overflow-x-auto max-h-[200px] whitespace-pre-wrap">
+                      {safeString(
+                        JSON.stringify(
+                          {
+                            before: selected.old_value,
+                            after: selected.new_value,
+                          },
+                          null,
+                          2
+                        )
                       )}
                     </pre>
                   </div>
@@ -415,6 +475,7 @@ function StatCard({
   );
 }
 
+/** DetailRow — value sudah pasti string (dari safeString di call site). */
 function DetailRow({
   label,
   value,
@@ -424,15 +485,23 @@ function DetailRow({
   value: string;
   mono?: boolean;
 }) {
+  const truncated =
+    value.length > 60 && !value.includes("\n")
+      ? value.slice(0, 60) + "…"
+      : value;
+
   return (
     <div className="flex items-start justify-between gap-3">
       <span className="text-[#6E6E73] dark:text-[#8E8E93] shrink-0 text-xs">
         {label}
       </span>
       <span
-        className={`text-right truncate ${mono ? "font-mono text-xs" : "text-sm"}`}
+        className={`text-right break-all ${
+          mono ? "font-mono text-xs" : "text-sm"
+        }`}
+        title={value}
       >
-        {value}
+        {truncated}
       </span>
     </div>
   );

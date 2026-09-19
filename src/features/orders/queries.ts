@@ -213,15 +213,29 @@ export async function getOrderCounters() {
 }
 
 // ============================================================
+// 🔥 REFERENCE DATA — CACHED 5 MENIT
+// ============================================================
+// ============================================================
 // REFERENCE DATA
 // ============================================================
 export async function getReferenceData() {
   const supabase = await createClient();
   const [{ data: customers }, { data: products }] = await Promise.all([
-    supabase.from("customers").select("id, code, name").eq("is_active", true).order("name"),
-    supabase.from("products").select("id, code, name, uom").eq("is_active", true).order("name"),
+    supabase
+      .from("customers")
+      .select("id, code, name")
+      .eq("is_active", true)
+      .order("name"),
+    supabase
+      .from("products")
+      .select("id, code, name, uom")
+      .eq("is_active", true)
+      .order("name"),
   ]);
-  return { customers: customers ?? [], products: products ?? [] };
+  return {
+    customers: customers ?? [],
+    products: products ?? [],
+  };
 }
 
 // ============================================================
@@ -251,7 +265,6 @@ export async function getContractsByCustomer(customerId: string) {
     .order("name");
   return data ?? [];
 }
-
 // ============================================================
 // ORDER COMPLIANCE STATUS
 // Return: SK aktif + status material (authorized? sufficient?)

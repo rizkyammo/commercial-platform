@@ -1,3 +1,5 @@
+import type { GeoJSON } from "geojson";
+
 export type Prospect = {
   id: string;
   code: string;
@@ -56,7 +58,7 @@ export type MarketArea = {
   code: string;
   name: string;
   type: string | null;
-  geometry: GeoJSON.MultiPolygon;
+  geometry: GeoJSON.MultiPolygon | null;
   province: string | null;
 };
 
@@ -64,7 +66,7 @@ export type CoverageArea = {
   id: string;
   base_id: string;
   radius_km: number;
-  geometry: GeoJSON.MultiPolygon | GeoJSON.Polygon;
+  geometry: GeoJSON.MultiPolygon | GeoJSON.Polygon | null;
   computed_at: string;
 };
 
@@ -87,13 +89,16 @@ export type ScenarioMetrics = {
   score: number;
 };
 
-export type MapLens = "portfolio" | "opportunity" | "coverage" | "expansion" | "scenario";
+export type MapLens =
+  | "portfolio"
+  | "opportunity"
+  | "coverage"
+  | "expansion"
+  | "scenario";
 
 export type MapLayer =
   | "sites"
   | "prospects"
   | "bases"
   | "market_areas"
-  | "coverage"
-  | "road_network"
-  | "province_boundary";
+  | "coverage";

@@ -42,8 +42,13 @@ export async function getCustomerRelated(id: string) {
   return { sites: sites ?? [], contracts: contracts ?? [] };
 }
 
+// ⚠️ No unstable_cache — karena pakai cookies()
 export async function listCustomersSimple() {
   const supabase = await createClient();
-  const { data } = await supabase.from("customers").select("id, code, name").eq("is_active", true).order("name");
+  const { data } = await supabase
+    .from("customers")
+    .select("id, code, name")
+    .eq("is_active", true)
+    .order("name");
   return data ?? [];
 }
