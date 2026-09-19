@@ -64,6 +64,12 @@ export function UserMenu({ profile }: { profile: Profile }) {
   Profile & Settings
 </Link>
 <Link
+  href="/admin/migration"
+  className="block px-4 py-2 text-sm hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
+>
+  Data Migration
+</Link>
+<Link
   href="/admin/users"
   className="block px-4 py-2 text-sm hover:bg-[#F2F2F4] dark:hover:bg-[#2C2C2E]"
 >
