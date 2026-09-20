@@ -56,15 +56,6 @@ function humanizeKey(key: string) {
     .join(" ");
 }
 
-function fmtNumber(n: number) {
-  const abs = Math.abs(n);
-  if (abs >= 1e12) return `Rp ${(n / 1e12).toFixed(1)} T`;
-  if (abs >= 1e9) return `Rp ${(n / 1e9).toFixed(1)} B`;
-  if (abs >= 1e6) return `Rp ${(n / 1e6).toFixed(1)} M`;
-  if (abs >= 1e3) return `Rp ${(n / 1e3).toFixed(1)} K`;
-  return `Rp ${n.toLocaleString("id-ID")}`;
-}
-
 // ============================ MAIN ============================
 
 export function ReportViewer({
@@ -110,24 +101,6 @@ export function ReportViewer({
   const reportRows: ReportRow[] = rows as ReportRow[];
 
   // ============================================================
-  // DERIVE SUMMARY CARDS
-  // ============================================================
-  const summaryCards = columns
-    .filter((c) => c.format === "money" || c.format === "number")
-    .slice(0, 4)
-    .map((c) => {
-      const sum = reportRows.reduce((a, r) => {
-        const v = r[c.key];
-        return a + (typeof v === "number" ? v : Number(v ?? 0) || 0);
-      }, 0);
-      return {
-        label: c.label,
-        value: c.format === "money" ? fmtNumber(sum) : sum.toLocaleString("id-ID"),
-        tone: "blue" as const,
-      };
-    });
-
-  // ============================================================
   // META
   // ============================================================
   const generatedAt = new Date().toLocaleString("id-ID", {
@@ -147,7 +120,8 @@ export function ReportViewer({
   const meta = {
     title,
     subtitle: `${rows.length} record ditemukan`,
-    period: period ?? (from || to ? `${from || "—"} → ${to || "—"}` : "All time"),
+    period:
+      period ?? (from || to ? `${from || "—"} → ${to || "—"}` : "All time"),
     generatedAt,
     generatedBy,
     rowCount: rows.length,
@@ -183,7 +157,6 @@ export function ReportViewer({
         generatedBy,
         columns,
         rows: reportRows,
-        summaryCards,
       });
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
@@ -250,7 +223,7 @@ export function ReportViewer({
       </div>
 
       {/* ============================ TOOLBAR ============================ */}
-      <div className="no-print bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
+      <div className="no-print bg-white dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] rounded-xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-2 items-center flex-wrap">
           <Input
             type="date"
@@ -290,15 +263,14 @@ export function ReportViewer({
       </div>
 
       {/* ============================ PDF PREVIEW ============================ */}
-      <div className="bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] rounded-xl overflow-hidden shadow-sm">
-<PdfReport
-  meta={meta}
-  columns={columns}
-  rows={reportRows}
-  summaryCards={summaryCards}
-  brandName="AmmoBiz"
-  brandSubtitle="Commercial Intelligence & Control Platform"
-/>
+      <div className="bg-white dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#2C2C2E] rounded-xl overflow-hidden shadow-sm">
+        <PdfReport
+          meta={meta}
+          columns={columns}
+          rows={reportRows}
+          brandName="AmmoBiz"
+          brandSubtitle="Commercial Intelligence & Control Platform"
+        />
       </div>
     </>
   );

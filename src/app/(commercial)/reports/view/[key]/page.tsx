@@ -12,6 +12,11 @@ const VALID_KEYS = [
   "bast-register",
   "outstanding-bast",
   "consignment-usage",
+  // ── NEW ──
+  "usage-report-register",
+  "stock-balance",
+  "stock-movement",
+  "invoice-register",
 
   // Commercial
   "cost-report",
@@ -21,6 +26,15 @@ const VALID_KEYS = [
   "contract-performance",
   "tax-report",
   "margin-tax-report",
+  // ── NEW ──
+  "project-summary",
+  "project-pnl",
+  "service-fee-report",
+  "pass-through-report",
+  "revenue-split",
+  "invoice-aging",
+  "payment-register",
+  "invoicing-by-business-model",
 
   // Compliance
   "sk-authorization",
@@ -31,8 +45,11 @@ const VALID_KEYS = [
   // Management
   "monthly-commercial",
   "yearly-commercial",
+  // ── NEW ──
+  "business-model-performance",
+  "flow-category-performance",
+  "order-type-performance",
 ];
-
 export default async function ReportViewPage({
   params,
   searchParams,

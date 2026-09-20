@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 // MORE MENU ITEMS (muncul di bottom sheet)
 // ============================================================
 const MORE_MENU = [
+  { label: "Invoicing", href: "/invoicing", icon: "invoice" },
+  { label: "Usage Reports", href: "/invoicing/usage-reports", icon: "usage" },
+  { label: "Projects", href: "/projects", icon: "folder" },
   { label: "Compliance", href: "/compliance", icon: "shield" },
   { label: "Analytics", href: "/analytics", icon: "chart" },
   { label: "Reports", href: "/reports", icon: "file" },
@@ -17,6 +20,7 @@ const MORE_MENU = [
   { label: "Admin - Organisation", href: "/admin/organisation", icon: "team" },
   { label: "Admin - Users", href: "/admin/users", icon: "users" },
   { label: "Admin - Audit Log", href: "/admin/audit-log", icon: "list" },
+  { label: "Admin - Migration", href: "/admin/migration", icon: "upload" },
 ];
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -64,6 +68,27 @@ const ICONS: Record<string, React.ReactNode> = {
   list: (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
       <path d="M4 5h12M4 10h12M4 15h12" />
+    </svg>
+  ),
+    invoice: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M5 3h7l3 3v11H5z" />
+      <path d="M12 3v3h3M7 9h6M7 12h3" />
+    </svg>
+  ),
+  usage: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M3 16h14M5 16V8M10 16V4M15 16v-6" />
+    </svg>
+  ),
+  folder: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M3 6a2 2 0 012-2h3l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    </svg>
+  ),
+  upload: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M10 14V4M6 8l4-4 4 4M4 16h12" />
     </svg>
   ),
 };

@@ -1,0 +1,10 @@
+shipment_number,order_number,shipment_date,transporter_code,origin,destination,transport_cost,status,remarks
+MIG-SHP-146,MIG-AMNT-146,2024-12-03,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-150,MIG-AMNT-150,2024-12-30,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-002,MIG-AMNT-002,2025-01-15,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-021,MIG-AMNT-021,2025-02-18,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-032,MIG-AMNT-032,2025-03-22,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-042,MIG-AMNT-042,2025-04-06,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-058,MIG-AMNT-058,2025-04-08,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-060,MIG-AMNT-060,2025-04-19,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet
+MIG-SHP-088,MIG-AMNT-088,2025-07-11,,TMCT,AMNT Site,0,COMPLETED,No transport detail in AMNT sheet

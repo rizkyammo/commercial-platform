@@ -37,7 +37,7 @@ type Invoice = {
   amount_with_tax: number;
   paid_amount: number;
   status: string;
-};
+};  
 
 type OrderItemRef = {
   product_id: string;
@@ -344,7 +344,7 @@ setForm({
           <div className="mt-2 text-xs text-[#6E6E73] dark:text-[#8E8E93]">
             {billingInfo.description} ·{" "}
             <span className="text-[#0A84FF]">
-              Auto trigger: {billingInfo.autoTrigger}
+              Auto trigger: {billingInfo.defaultTrigger}
             </span>
           </div>
         )}

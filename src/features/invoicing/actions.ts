@@ -536,3 +536,216 @@ export async function getMyInvoicePermissions() {
     },
   };
 }
+
+// ============================================================
+// CREATE SPOT INVOICE FROM BAST
+// Dipanggil setelah BAST completed untuk business model SPOT_BASIS
+// ============================================================
+export async function createSpotInvoiceFromBAST(bastId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const perms = await getPermissions(supabase);
+  if (
+    !can(perms, ["INVOICE_CREATE", "INVOICE_MANAGE"], {
+      fallback: ["ORDER_APPROVE", "ORDER_UPDATE_DRAFT"],
+    })
+  ) {
+    return { error: "Anda tidak memiliki izin membuat invoice." };
+  }
+
+  // Ambil BAST + order + order items
+  const { data: bast } = await supabase
+    .from("basts")
+    .select("*, orders(id, customer_id, currency, business_model, project_code, order_type)")
+    .eq("id", bastId)
+    .single();
+
+  if (!bast) return { error: "BAST tidak ditemukan." };
+  const order = bast.orders as any;
+  if (!order) return { error: "Order tidak ditemukan." };
+
+  // Cek duplicate — 1 BAST → 1 invoice
+  const { data: existing } = await supabase
+    .from("invoices")
+    .select("id, invoice_number")
+    .eq("source_bast_id", bastId)
+    .maybeSingle();
+
+  if (existing) {
+    return {
+      error: `Invoice untuk BAST ini sudah ada: ${existing.invoice_number}`,
+    };
+  }
+
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("*")
+    .eq("order_id", order.id)
+    .order("sort_order");
+
+  if (!orderItems || orderItems.length === 0) {
+    return { error: "Order tidak memiliki item." };
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate()); // SPOT: due = today
+
+  const { data: invoice, error: invErr } = await supabase
+    .from("invoices")
+    .insert({
+      order_id: order.id,
+      customer_id: order.customer_id,
+      billing_model: "SPOT_BASIS",
+      invoice_trigger: "BAST_COMPLETE",
+      payment_method: "CASH",
+      invoice_type: "FULL",
+      invoice_date: today,
+      due_date: dueDate.toISOString().slice(0, 10),
+      payment_term_days: 0,
+      currency: order.currency ?? "IDR",
+      exchange_rate: 1,
+      tax_rate: 11,
+      pph23_rate: 0,
+      project_id: order.project_id ?? null,
+      source_bast_id: bastId,
+      status: "DRAFT",
+      created_by: user.id,
+      updated_by: user.id,
+    })
+    .select()
+    .single();
+
+  if (invErr) return { error: invErr.message };
+
+  const itemRows = orderItems.map((it: any, idx: number) => ({
+    invoice_id: invoice.id,
+    product_id: it.product_id,
+    description: it.description,
+    line_type: it.line_type ?? "MATERIAL",
+    margin_type: it.margin_type ?? "PASS_THROUGH",
+    qty: it.qty,
+    uom: it.uom,
+    unit_price: it.unit_price,
+    unit_cost: it.unit_cost ?? 0,
+    line_value: Number(it.qty) * Number(it.unit_price),
+    sort_order: idx,
+  }));
+
+  const { error: itemErr } = await supabase
+    .from("invoice_items")
+    .insert(itemRows);
+
+  if (itemErr) return { error: itemErr.message };
+
+  await supabase.rpc("recompute_invoice_totals", {
+    p_invoice_id: invoice.id,
+  });
+
+  await writeAudit({
+    action: "CREATE_FROM_BAST",
+    module: "Invoice",
+    resourceType: "invoice",
+    resourceId: invoice.id,
+    newValue: { bast_id: bastId, order_id: order.id },
+  });
+
+  revalidatePath(`/orders/${order.id}`);
+  revalidatePath(`/invoicing/${invoice.id}`);
+  revalidatePath("/invoicing");
+
+  return { data: invoice };
+}
+
+// ============================================================
+// CREATE AGENCY FEE ORDER
+// Buat order + items untuk fee (license / mixing / urea / backcharge)
+// ============================================================
+export async function createAgencyFeeOrder(input: unknown) {
+  const { agencyFeeOrderSchema } = await import(
+    "@/lib/validation/usage-report"
+  );
+  const parsed = agencyFeeOrderSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const perms = await getPermissions(supabase);
+  if (
+    !can(perms, ["INVOICE_CREATE", "INVOICE_MANAGE"], {
+      fallback: ["ORDER_APPROVE", "ORDER_UPDATE_DRAFT"],
+    })
+  ) {
+    return { error: "Anda tidak memiliki izin membuat order fee." };
+  }
+
+  const d = parsed.data;
+
+  // Buat order dengan order_type SERVICE_FEE / SERVICE_BACKCHARGE
+  // Status langsung APPROVED karena ini fee (tidak melalui approval flow material)
+  const { data: order, error: orderErr } = await supabase
+    .from("orders")
+    .insert({
+      customer_id: d.customer_id,
+      project_code: d.project_code,
+      project_name: d.project_name ?? null,
+      order_type: d.order_type,
+      fee_reference: d.fee_reference ?? null,
+      business_model: d.business_model,
+      currency: d.currency,
+      ppn_rate: d.ppn_rate,
+      pph23_rate: d.pph23_rate,
+      status: "APPROVED",
+      notes: d.notes ?? null,
+      created_by: user.id,
+      updated_by: user.id,
+    })
+    .select()
+    .single();
+
+  if (orderErr) return { error: orderErr.message };
+
+  const itemRows = d.lines.map((ln, idx) => ({
+    order_id: order.id,
+    product_id: ln.product_id ?? null,
+    description: ln.description,
+    line_type: ln.line_type,
+    margin_type: "FEE",
+    qty: ln.qty,
+    uom: ln.uom,
+    unit_price: ln.unit_price,
+    unit_cost: ln.unit_cost,
+    line_value: ln.qty * ln.unit_price,
+    sort_order: idx,
+  }));
+
+  const { error: itemErr } = await supabase
+    .from("order_items")
+    .insert(itemRows);
+
+  if (itemErr) return { error: itemErr.message };
+
+  await supabase.rpc("recompute_order_totals", {
+    p_order_id: order.id,
+  });
+
+  await writeAudit({
+    action: "CREATE_FEE_ORDER",
+    module: "Order",
+    resourceType: "order",
+    resourceId: order.id,
+    newValue: {
+      order_number: order.order_number,
+      order_type: d.order_type,
+      project_code: d.project_code,
+    },
+  });
+
+  revalidatePath("/orders");
+  revalidatePath("/invoicing");
+  return { data: order };
+}

@@ -20,7 +20,9 @@ type ReportDef = {
 };
 
 const REPORTS: ReportDef[] = [
-  // Operational
+  // ============================================================
+  // OPERATIONAL
+  // ============================================================
   {
     key: "order-register",
     name: "Order Register",
@@ -64,14 +66,48 @@ const REPORTS: ReportDef[] = [
     formats: ["PDF", "XLSX"],
   },
   {
-  key: "consignment-usage",
-  name: "Consignment Usage",
-  description: "Consignment and VMI orders with usage details.",
-  category: "operational",
-  formats: ["PDF", "XLSX"],
-},
+    key: "consignment-usage",
+    name: "Consignment Usage (Legacy)",
+    description: "Consignment and VMI orders with usage details.",
+    category: "operational",
+    formats: ["PDF", "XLSX"],
+  },
+  // ── NEW ──
+  {
+    key: "usage-report-register",
+    name: "Usage Report Register",
+    description:
+      "Semua usage report (consignment + BCM) dengan periode, qty, status, invoice.",
+    category: "operational",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "stock-balance",
+    name: "Stock Balance",
+    description:
+      "Saldo stok per project/product (dari mutasi shipment IN dan usage OUT).",
+    category: "operational",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "stock-movement",
+    name: "Stock Movement History",
+    description:
+      "Riwayat mutasi stok (IN shipment, OUT usage, adjustment) per periode.",
+    category: "operational",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "invoice-register",
+    name: "Invoice Register",
+    description: "Semua invoice dengan status, due date, paid, outstanding.",
+    category: "operational",
+    formats: ["PDF", "XLSX"],
+  },
 
-  // Commercial
+  // ============================================================
+  // COMMERCIAL
+  // ============================================================
   {
     key: "cost-report",
     name: "Cost Report",
@@ -108,21 +144,87 @@ const REPORTS: ReportDef[] = [
     formats: ["PDF", "XLSX"],
   },
   {
-  key: "tax-report",
-  name: "Tax Report (PPN + PPh 23)",
-  description: "PPN 11%, PPh 23 2%, PPN Payable per order.",
-  category: "commercial",
-  formats: ["PDF", "XLSX"],
-},
-{
-  key: "margin-tax-report",
-  name: "Margin Before vs After Tax",
-  description: "Margin comparison before and after tax.",
-  category: "commercial",
-  formats: ["PDF", "XLSX"],
-},
+    key: "tax-report",
+    name: "Tax Report (PPN + PPh 23)",
+    description: "PPN 11%, PPh 23 2%, PPN Payable per order.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "margin-tax-report",
+    name: "Margin Before vs After Tax",
+    description: "Margin comparison before and after tax.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  // ── NEW ──
+  {
+    key: "project-summary",
+    name: "Project Summary",
+    description:
+      "Grouping multi-order per project_code — revenue, cost, margin, total porsi DAN.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "project-pnl",
+    name: "Project P&L",
+    description:
+      "Per project: material vs service revenue, cost, margin before/after tax.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "service-fee-report",
+    name: "Service Fee Report",
+    description:
+      "Semua order fee (license / mixing / urea / backcharge) + PPN, PPh 23.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "pass-through-report",
+    name: "Material Pass-Through Report",
+    description:
+      "Material dengan margin 0 (harga beli = harga jual) — cek konsistensi vendor-customer.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "revenue-split",
+    name: "Revenue Split (Material vs Fee)",
+    description:
+      "Revenue terbagi berdasarkan margin_type (PASS_THROUGH/FEE) dan line_type.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "invoice-aging",
+    name: "Invoice Aging",
+    description:
+      "Outstanding per aging bucket (Not Due, 1-30, 31-60, 61-90, 90+).",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "payment-register",
+    name: "Payment Register",
+    description: "Semua payment per invoice — reference, tanggal, amount.",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "invoicing-by-business-model",
+    name: "Invoicing by Business Model",
+    description:
+      "Aggregate invoice per billing model (SPOT_BASIS / CONSIGNMENT / BCM / AGENCY).",
+    category: "commercial",
+    formats: ["PDF", "XLSX"],
+  },
 
-  // Compliance
+  // ============================================================
+  // COMPLIANCE
+  // ============================================================
   {
     key: "sk-authorization",
     name: "SK Authorization Report",
@@ -152,7 +254,9 @@ const REPORTS: ReportDef[] = [
     formats: ["PDF", "XLSX"],
   },
 
-  // Management
+  // ============================================================
+  // MANAGEMENT
+  // ============================================================
   {
     key: "monthly-commercial",
     name: "Monthly Commercial Review",
@@ -167,8 +271,35 @@ const REPORTS: ReportDef[] = [
     category: "management",
     formats: ["PDF", "XLSX"],
   },
+  // ── NEW ──
+  {
+    key: "business-model-performance",
+    name: "Business Model Performance",
+    description:
+      "Aggregate by business model — total revenue, cost, margin, PPN, PPh 23.",
+    category: "management",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "flow-category-performance",
+    name: "Flow Category Performance",
+    description:
+      "Aggregate per flow category (SPOT_BASIS / CONSIGNMENT / BCM / AGENCY).",
+    category: "management",
+    formats: ["PDF", "XLSX"],
+  },
+  {
+    key: "order-type-performance",
+    name: "Order Type Performance",
+    description:
+      "Aggregate per order_type (MATERIAL / SERVICE_FEE / SERVICE_BACKCHARGE).",
+    category: "management",
+    formats: ["PDF", "XLSX"],
+  },
 
-  // Custom
+  // ============================================================
+  // CUSTOM
+  // ============================================================
   {
     key: "custom-builder",
     name: "Custom Report Builder",

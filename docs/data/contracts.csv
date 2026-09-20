@@ -1,0 +1,4 @@
+code,name,customer_code,site_code,contract_number,start_date,end_date,value,currency,status,notes
+CTR-AMNT-2024,Contract AMNT 2024-2025,AMNT,AMNT-TMCT,AMNT-2024-2025,2024-01-01,2025-12-31,0,IDR,ACTIVE,Migrasi AMNT
+CTR-KNI-2024,Contract KNI License,KNI,KNI-MAIN,KNI-2024-2025,2024-01-01,2025-12-31,0,IDR,ACTIVE,License + distribution
+CTR-OMS-2024,Contract OMS Backcharge,OMS,OMS-MAIN,OMS-2024-2025,2024-01-01,2025-12-31,0,IDR,ACTIVE,Backcharge + mixing

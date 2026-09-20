@@ -348,3 +348,86 @@ export async function getUninvoicedOrders() {
 
   return result;
 }
+
+// ============================================================
+// PROJECT SUMMARY — grouping multi-order per project_code
+// ============================================================
+export async function listProjectSummaries({
+  q,
+  page = 1,
+  pageSize = 20,
+}: {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+} = {}) {
+  const supabase = await createClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("project_summary")
+    .select("*", { count: "exact" })
+    .order("last_order_at", { ascending: false })
+    .range(from, to);
+
+  if (q) query = query.ilike("project_code", `%${q}%`);
+
+  const { data, count, error } = await query;
+  if (error) throw error;
+  return { data: data ?? [], count: count ?? 0 };
+}
+
+// ============================================================
+// PROJECT DETAIL — semua order dalam 1 project_code
+// ============================================================
+export async function getProjectDetail(projectCode: string) {
+  const supabase = await createClient();
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select(
+      "id, order_number, order_type, business_model, status, selling_value, total_direct_cost, margin, ppn_output, pph23_amount, margin_after_tax, currency, created_at, customers(id, code, name)"
+    )
+    .eq("project_code", projectCode)
+    .order("created_at", { ascending: true });
+
+  const { data: summary } = await supabase
+    .from("project_summary")
+    .select("*")
+    .eq("project_code", projectCode)
+    .maybeSingle();
+
+  return {
+    project_code: projectCode,
+    summary: summary ?? null,
+    orders: orders ?? [],
+  };
+}
+
+// ============================================================
+// DASHBOARD: revenue split PASS_THROUGH vs FEE
+// (untuk analytics — dipakai halaman Analytics/Projects)
+// ============================================================
+export async function getRevenueSplitByMarginType() {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("invoice_items")
+    .select("line_type, margin_type, line_value, invoices!inner(status)")
+    .in("invoices.status", ["ISSUED", "SENT", "PARTIAL_PAID", "PAID", "OVERDUE"]);
+
+  const rows = data ?? [];
+
+  const byMarginType: Record<string, number> = {};
+  const byLineType: Record<string, number> = {};
+
+  for (const r of rows) {
+    const mt = r.margin_type ?? "PASS_THROUGH";
+    const lt = r.line_type ?? "MATERIAL";
+    byMarginType[mt] = (byMarginType[mt] ?? 0) + Number(r.line_value ?? 0);
+    byLineType[lt] = (byLineType[lt] ?? 0) + Number(r.line_value ?? 0);
+  }
+
+  return { byMarginType, byLineType };
+}

@@ -14,13 +14,6 @@ export type ReportColumn = {
 
 export type ReportRow = Record<string, string | number | null | undefined>;
 
-export type SummaryCard = {
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: "neutral" | "blue" | "green" | "red" | "orange";
-};
-
 export type ReportMeta = {
   title: string;
   subtitle?: string;
@@ -82,7 +75,6 @@ export const PdfReport = forwardRef<
     meta: ReportMeta;
     columns: ReportColumn[];
     rows: ReportRow[];
-    summaryCards?: SummaryCard[];
     brandName?: string;
     brandSubtitle?: string;
     showRowNumber?: boolean;
@@ -93,9 +85,8 @@ export const PdfReport = forwardRef<
     meta,
     columns,
     rows,
-    summaryCards,
     brandName = "AmmoBiz",
-brandSubtitle = "Commercial Intelligence & Control Platform",
+    brandSubtitle = "Commercial Intelligence & Control Platform",
     showRowNumber = true,
     zebra = true,
   },
@@ -104,7 +95,7 @@ brandSubtitle = "Commercial Intelligence & Control Platform",
   return (
     <div
       ref={ref}
-      className="pdf-report bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7]"
+      className="pdf-report bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7]"
       style={{
         fontFamily:
           "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -274,69 +265,6 @@ brandSubtitle = "Commercial Intelligence & Control Platform",
         </div>
       )}
 
-      {/* ============================ SUMMARY CARDS ============================ */}
-      {summaryCards && summaryCards.length > 0 && (
-        <div
-          style={{
-            padding: "20px 32px",
-            display: "grid",
-            gridTemplateColumns: `repeat(${Math.min(summaryCards.length, 4)}, 1fr)`,
-            gap: 12,
-            borderBottom: "1px solid #E5E5EA",
-          }}
-        >
-          {summaryCards.map((c, i) => {
-            const colors: Record<string, { color: string; bg: string }> = {
-              neutral: { color: "#1D1D1F", bg: "#F6F6F7" },
-              blue: { color: "#0A84FF", bg: "#EAF2FB" },
-              green: { color: "#1B8A3B", bg: "#E8F8EC" },
-              red: { color: "#B71C1C", bg: "#FFEBEE" },
-              orange: { color: "#A15C00", bg: "#FFF4E5" },
-            };
-            const tone = colors[c.tone ?? "neutral"];
-            return (
-              <div
-                key={i}
-                style={{
-                  padding: "12px 14px",
-                  border: "1px solid #E5E5EA",
-                  borderRadius: 8,
-                  background: tone.bg,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: "#6E6E73",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    fontWeight: 600,
-                  }}
-                >
-                  {c.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: tone.color,
-                    marginTop: 4,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {c.value}
-                </div>
-                {c.hint && (
-                  <div style={{ fontSize: 9, color: "#8E8E93", marginTop: 2 }}>
-                    {c.hint}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* ============================ TABLE ============================ */}
       <div style={{ padding: "20px 32px" }}>
         <table
@@ -409,45 +337,121 @@ brandSubtitle = "Commercial Intelligence & Control Platform",
                 </td>
               </tr>
             ) : (
-              rows.map((r, i) => (
+              <>
+                {rows.map((r, i) => (
+                  <tr
+                    key={i}
+                    style={{
+                      background:
+                        zebra && i % 2 === 1 ? "#FAFAFB" : "#FFFFFF",
+                      borderBottom: "1px solid #F2F2F4",
+                    }}
+                  >
+                    {showRowNumber && (
+                      <td
+                        style={{
+                          padding: "6px 8px",
+                          textAlign: "right",
+                          color: "#8E8E93",
+                          fontSize: 9,
+                        }}
+                      >
+                        {i + 1}
+                      </td>
+                    )}
+                    {columns.map((c) => (
+                      <td
+                        key={c.key}
+                        style={{
+                          padding: "6px 10px",
+                          textAlign:
+                            c.align === "right"
+                              ? "right"
+                              : c.align === "center"
+                                ? "center"
+                                : "left",
+                          color: "#1D1D1F",
+                        }}
+                      >
+                        {fmtValue(r[c.key], c.format)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {/* ====================== SUM ROW ====================== */}
                 <tr
-                  key={i}
                   style={{
-                    background: zebra && i % 2 === 1 ? "#FAFAFB" : "#FFFFFF",
-                    borderBottom: "1px solid #F2F2F4",
+                    background: "#F6F6F7",
+                    borderTop: "2px solid #1D1D1F",
+                    borderBottom: "2px solid #1D1D1F",
+                    fontWeight: 700,
                   }}
                 >
                   {showRowNumber && (
                     <td
                       style={{
-                        padding: "6px 8px",
+                        padding: "8px 8px",
                         textAlign: "right",
-                        color: "#8E8E93",
+                        color: "#6E6E73",
                         fontSize: 9,
+                        fontWeight: 700,
                       }}
                     >
-                      {i + 1}
+                      Σ
                     </td>
                   )}
-                  {columns.map((c) => (
-                    <td
-                      key={c.key}
-                      style={{
-                        padding: "6px 10px",
-                        textAlign:
-                          c.align === "right"
-                            ? "right"
-                            : c.align === "center"
-                              ? "center"
-                              : "left",
-                        color: "#1D1D1F",
-                      }}
-                    >
-                      {fmtValue(r[c.key], c.format)}
-                    </td>
-                  ))}
+                  {columns.map((c, i) => {
+                    if (i === 0) {
+                      return (
+                        <td
+                          key={c.key}
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: c.align === "right" ? "right" : "left",
+                            color: "#1D1D1F",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Total
+                        </td>
+                      );
+                    }
+                    if (c.format === "money" || c.format === "number") {
+                      const sum = rows.reduce((a, r) => {
+                        const v = r[c.key];
+                        return (
+                          a + (typeof v === "number" ? v : Number(v ?? 0) || 0)
+                        );
+                      }, 0);
+                      return (
+                        <td
+                          key={c.key}
+                          style={{
+                            padding: "8px 10px",
+                            textAlign:
+                              c.align === "right"
+                                ? "right"
+                                : c.align === "center"
+                                  ? "center"
+                                  : "left",
+                            color: "#1D1D1F",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {fmtValue(sum, c.format)}
+                        </td>
+                      );
+                    }
+                    return <td key={c.key} />;
+                  })}
                 </tr>
-              ))
+              </>
             )}
           </tbody>
         </table>

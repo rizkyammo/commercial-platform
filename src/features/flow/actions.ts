@@ -19,11 +19,12 @@ async function buildProcurementCoverage(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orderId: string
 ) {
-  // 1) Order items
+  // 1) Order items — hanya yang butuh procurement (exclude SERVICE)
   const { data: orderItems } = await supabase
     .from("order_items")
-    .select("product_id, qty, uom, products(name, code, uom)")
-    .eq("order_id", orderId);
+    .select("product_id, qty, uom, products!inner(name, code, uom, category)")
+    .eq("order_id", orderId)
+    .neq("products.category", "SERVICE");
 
   // 2) Procurements for order (semua status)
   const { data: procs } = await supabase
@@ -119,6 +120,92 @@ export async function getProcurementCoverage(orderId: string) {
 }
 
 // ============================================================
+// QTY CAP GUARD
+// Total procurement qty per product TIDAK BOLEH melebihi
+// order_items.qty untuk product yang sama.
+//
+// Param excludeProcurementId: dipakai saat UPDATE agar procurement
+// yang sedang diedit tidak dihitung 2x.
+// ============================================================
+async function checkProcurementQtyCap(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orderId: string,
+  newItems: { product_id: string; qty: number }[],
+  excludeProcurementId?: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  // 1) Order qty per product (hanya yang butuh procurement)
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("product_id, qty, products!inner(name)")
+    .eq("order_id", orderId);
+
+  const orderQty = new Map<string, { qty: number; name: string }>();
+  for (const oi of orderItems ?? []) {
+    orderQty.set(oi.product_id, {
+      qty: Number(oi.qty),
+      name: (oi.products as { name?: string } | null)?.name ?? "—",
+    });
+  }
+
+  // 2) Existing procurement qty (exclude procurement yang sedang diupdate)
+  const { data: procs } = await supabase
+    .from("procurements")
+    .select("id")
+    .eq("order_id", orderId);
+
+  const procIds = (procs ?? [])
+    .map((p) => p.id)
+    .filter((id) => id !== excludeProcurementId);
+
+  const existingQty = new Map<string, number>();
+  if (procIds.length > 0) {
+    const { data: items } = await supabase
+      .from("procurement_items")
+      .select("product_id, qty")
+      .in("procurement_id", procIds);
+    for (const it of items ?? []) {
+      existingQty.set(
+        it.product_id,
+        (existingQty.get(it.product_id) ?? 0) + Number(it.qty)
+      );
+    }
+  }
+
+  // 3) Aggregate qty baru (kalau ada duplikat product dalam draft)
+  const draftQty = new Map<string, number>();
+  for (const it of newItems) {
+    draftQty.set(
+      it.product_id,
+      (draftQty.get(it.product_id) ?? 0) + Number(it.qty)
+    );
+  }
+
+  // 4) Cek per product
+  const errors: string[] = [];
+  for (const [productId, newQty] of draftQty) {
+    const cap = orderQty.get(productId);
+    if (!cap) {
+      errors.push(
+        `Produk tidak terdaftar di order items (product_id: ${productId}).`
+      );
+      continue;
+    }
+    const existing = existingQty.get(productId) ?? 0;
+    const total = existing + newQty;
+    if (total > cap.qty) {
+      errors.push(
+        `${cap.name}: total procurement akan menjadi ${total} (existing ${existing} + baru ${newQty}), melebihi qty order ${cap.qty}.`
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, error: errors.join(" ") };
+  }
+  return { ok: true };
+}
+
+// ============================================================
 // PROCUREMENT
 // ============================================================
 
@@ -149,6 +236,17 @@ export async function createProcurement(orderId: string, input: unknown) {
   }
 
   const d = parsed.data;
+
+  // ------------------------------------------------------------
+  // QTY CAP GUARD: total procurement tidak boleh melebihi qty PO
+  // ------------------------------------------------------------
+  const capCheck = await checkProcurementQtyCap(
+    supabase,
+    orderId,
+    d.items.map((it) => ({ product_id: it.product_id, qty: it.qty }))
+  );
+  if (!capCheck.ok) return { error: capCheck.error };
+
   const { data: proc, error } = await supabase
     .from("procurements")
     .insert({
@@ -188,7 +286,14 @@ export async function createProcurement(orderId: string, input: unknown) {
         updated_by: user.id,
       };
     });
-    await supabase.from("procurement_items").insert(rows);
+    const { error: itemsErr } = await supabase
+      .from("procurement_items")
+      .insert(rows);
+    if (itemsErr) {
+      // Rollback header
+      await supabase.from("procurements").delete().eq("id", proc.id);
+      return { error: itemsErr.message };
+    }
   }
 
   await writeAudit({
@@ -225,6 +330,18 @@ export async function updateProcurement(procId: string, input: unknown) {
     return { error: "Hanya procurement DRAFT dapat diedit." };
 
   const d = parsed.data;
+
+  // ------------------------------------------------------------
+  // QTY CAP GUARD — exclude procurement yang sedang diupdate
+  // ------------------------------------------------------------
+  const capCheck = await checkProcurementQtyCap(
+    supabase,
+    existing.order_id,
+    d.items.map((it) => ({ product_id: it.product_id, qty: it.qty })),
+    procId
+  );
+  if (!capCheck.ok) return { error: capCheck.error };
+
   const { error: updErr } = await supabase
     .from("procurements")
     .update({
@@ -265,7 +382,10 @@ export async function updateProcurement(procId: string, input: unknown) {
         updated_by: user.id,
       };
     });
-    await supabase.from("procurement_items").insert(rows);
+    const { error: itemsErr } = await supabase
+      .from("procurement_items")
+      .insert(rows);
+    if (itemsErr) return { error: itemsErr.message };
   }
 
   await writeAudit({
@@ -278,7 +398,7 @@ export async function updateProcurement(procId: string, input: unknown) {
   return { ok: true };
 }
 
-// ---------- SUBMIT (boleh per-vendor, tanpa coverage check) ----------
+// ---------- SUBMIT ----------
 export async function submitProcurement(procId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -368,7 +488,6 @@ export async function verifyProcurement(procId: string) {
     });
   }
 
-  // Notifikasi ke tim terkait kalau coverage sudah lengkap
   try {
     const coverage = await buildProcurementCoverage(supabase, existing.order_id);
     if (coverage.all_verified) {
@@ -428,7 +547,6 @@ export async function createShipment(orderId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  // Gate #1: order status harus ISSUED+
   const { data: order } = await supabase
     .from("orders")
     .select("status")
@@ -441,7 +559,7 @@ export async function createShipment(orderId: string, input: unknown) {
     return { error: "Order belum siap untuk shipment." };
   }
 
-  // Gate #2: SEMUA order items harus sudah ter-cover oleh procurement VERIFIED
+  // Coverage gate
   const coverage = await buildProcurementCoverage(supabase, orderId);
   if (!coverage.all_verified) {
     const missing = coverage.items
@@ -559,7 +677,7 @@ export async function updateShipment(shipId: string, input: unknown) {
   return { ok: true };
 }
 
-// ---------- CONFIRM (dengan qty validation + quota realize) ----------
+// ---------- CONFIRM ----------
 export async function confirmShipment(shipId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -576,7 +694,6 @@ export async function confirmShipment(shipId: string) {
 
   const orderId = ship.order_id;
 
-  // Ambil order qty per product
   const { data: orderItems } = await supabase
     .from("order_items")
     .select("product_id, qty")
@@ -585,13 +702,11 @@ export async function confirmShipment(shipId: string) {
     (orderItems ?? []).map((it) => [it.product_id, Number(it.qty)])
   );
 
-  // Ambil shipment items
   const { data: shipItems } = await supabase
     .from("shipment_items")
     .select("product_id, qty")
     .eq("shipment_id", shipId);
 
-  // Ambil confirmed shipments
   const { data: confirmedShips } = await supabase
     .from("shipments")
     .select("id")
@@ -613,7 +728,6 @@ export async function confirmShipment(shipId: string) {
     }
   }
 
-  // Validasi: sudah shipped + new <= ordered
   for (const it of shipItems ?? []) {
     const ordered = orderQtyMap.get(it.product_id) ?? 0;
     const alreadyShipped = shippedMap.get(it.product_id) ?? 0;
@@ -625,7 +739,6 @@ export async function confirmShipment(shipId: string) {
     }
   }
 
-  // Update shipment status
   const { error } = await supabase
     .from("shipments")
     .update({
@@ -638,7 +751,6 @@ export async function confirmShipment(shipId: string) {
 
   if (error) return { error: error.message };
 
-  // Realize quota (emit PO_RELEASE + DISTRIBUTION_REALIZATION)
   const { error: rpcErr } = await supabase.rpc("realize_quota_for_shipment", {
     p_shipment_id: shipId,
     p_actor: user.id,
@@ -647,14 +759,12 @@ export async function confirmShipment(shipId: string) {
     console.error("[confirmShipment] realize_quota_for_shipment failed:", rpcErr);
   }
 
-  // Update order status
   const { data: order } = await supabase
     .from("orders")
     .select("status")
     .eq("id", orderId)
     .single();
 
-  // Recompute shipped totals
   const { data: allConfirmed } = await supabase
     .from("shipments")
     .select("id")
@@ -815,7 +925,6 @@ export async function createBastDraft(orderId: string, input: unknown) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
-  // Guard: minimal 1 delivery
   const { count: deliveryCount } = await supabase
     .from("deliveries")
     .select("*", { count: "exact", head: true })
@@ -828,7 +937,6 @@ export async function createBastDraft(orderId: string, input: unknown) {
     };
   }
 
-  // Guard: order status minimal IN_PROGRESS
   const { data: order } = await supabase
     .from("orders")
     .select("status")
@@ -1034,7 +1142,6 @@ export async function completeBast(bastId: string) {
 
   if (error) return { error: error.message };
 
-  // Auto-close order jika FULFILLED
   const { data: order } = await supabase
     .from("orders")
     .select("status")

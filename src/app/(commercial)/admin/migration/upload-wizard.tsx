@@ -19,6 +19,12 @@ const ENTITIES: { key: EntityType; label: string; description: string }[] = [
   { key: "contracts", label: "Contracts", description: "Kontrak + business rules" },
   { key: "orders", label: "Orders", description: "Header order / PO" },
   { key: "order_items", label: "Order Items", description: "Line item order" },
+  { key: "procurements", label: "Procurements", description: "Purchase order ke vendor" },
+  { key: "procurement_items", label: "Procurement Items", description: "Line item procurement" },
+  { key: "shipments", label: "Shipments", description: "Pengiriman ke customer" },
+  { key: "basts", label: "BAST", description: "Berita acara serah terima" },
+  { key: "deliveries", label: "Deliveries", description: "Delivery order" },
+{ key: "invoices", label: "Invoices", description: "Customer invoice" },
 ];
 
 type Step = "setup" | "processing" | "done";
@@ -36,78 +42,72 @@ export function UploadWizard({ onClose }: { onClose: () => void }) {
     rows: number;
   } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-async function parseFile(f: File): Promise<Record<string, unknown>[]> {
-  const buf = await f.arrayBuffer();
+  const uploadInFlight = useRef(false);
 
   // ============================================================
-  // CSV — PAPA PARSE dengan ARRAY MODE (paling robust)
+  // PARSER
   // ============================================================
-  if (f.name.toLowerCase().endsWith(".csv")) {
-    const Papa = (await import("papaparse")).default;
+  async function parseFile(f: File): Promise<Record<string, unknown>[]> {
+    const buf = await f.arrayBuffer();
 
-    // Decode UTF-8 + strip BOM
-    let text = new TextDecoder("utf-8").decode(buf);
-    text = text.replace(/^\uFEFF/, "");
+    // ---------- CSV ----------
+    if (f.name.toLowerCase().endsWith(".csv")) {
+      const Papa = (await import("papaparse")).default;
 
-    // ============================================================
-    // Parse sebagai ARRAY OF ARRAYS (header: false)
-    // PapaParse auto-detect delimiter ( , ; \t | )
-    // ============================================================
-    const result = Papa.parse<string[]>(text, {
-      header: false,
-      skipEmptyLines: "greedy",
-      delimiter: "", // biar auto-detect
-      dynamicTyping: false,
+      let text = new TextDecoder("utf-8").decode(buf);
+      text = text.replace(/^\uFEFF/, "");
+
+      const parsed = Papa.parse<string[]>(text, {
+        header: false,
+        skipEmptyLines: "greedy",
+        delimiter: "",
+        dynamicTyping: false,
+      });
+
+      if (parsed.errors.length > 0) {
+        console.warn("[CSV parse warnings]", parsed.errors);
+      }
+
+      const rows = parsed.data;
+      if (!rows || rows.length < 2) {
+        console.warn("[CSV] File kosong atau cuma header");
+        return [];
+      }
+
+      const headers = rows[0].map((h) => String(h ?? "").trim());
+
+      const objects: Record<string, unknown>[] = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const obj: Record<string, unknown> = {};
+        for (let j = 0; j < headers.length; j++) {
+          const key = headers[j];
+          if (!key) continue;
+          const val = row[j];
+          obj[key] = val === undefined || val === null ? "" : String(val);
+        }
+        objects.push(obj);
+      }
+
+      return JSON.parse(JSON.stringify(objects));
+    }
+
+    // ---------- XLSX / XLS ----------
+    const wb = XLSX.read(buf, { type: "array", cellDates: false });
+    const sheetName = wb.SheetNames[0];
+    const sheet = wb.Sheets[sheetName];
+
+    const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      defval: "",
+      raw: false,
     });
 
-    if (result.errors.length > 0) {
-      console.warn("[CSV parse warnings]", result.errors);
-    }
-
-    const rows = result.data;
-    if (!rows || rows.length < 2) {
-      console.warn("[CSV] File kosong atau cuma header");
-      return [];
-    }
-
-    // Baris pertama = header
-    const headers = rows[0].map((h) => String(h ?? "").trim());
-
-    // Build plain objects manual
-    const objects: Record<string, unknown>[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const obj: Record<string, unknown> = {}; // plain object literal
-      for (let j = 0; j < headers.length; j++) {
-        const key = headers[j];
-        if (!key) continue;
-        const val = row[j];
-        obj[key] = val === undefined || val === null ? "" : String(val);
-      }
-      objects.push(obj);
-    }
-
-    // Force-remove prototype chain via JSON serialization
-    return JSON.parse(JSON.stringify(objects));
+    return JSON.parse(JSON.stringify(raw));
   }
 
   // ============================================================
-  // XLSX / XLS — pakai XLSX library
+  // HANDLERS
   // ============================================================
-  const wb = XLSX.read(buf, { type: "array", cellDates: false });
-  const sheetName = wb.SheetNames[0];
-  const sheet = wb.Sheets[sheetName];
-
-  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-    defval: "",
-    raw: false,
-  });
-
-  // Force plain objects
-  return JSON.parse(JSON.stringify(raw));
-}
-
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -116,10 +116,14 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
   }
 
   function onUpload() {
+    // Guard: cegah double-click / double-submit
+    if (uploadInFlight.current) return;
     if (!file) {
       setError("Pilih file dulu.");
       return;
     }
+    uploadInFlight.current = true;
+
     setError(null);
     setStep("processing");
 
@@ -132,12 +136,14 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
         if (rows.length === 0) {
           setError("File kosong atau tidak ada baris data.");
           setStep("setup");
+          uploadInFlight.current = false;
           return;
         }
 
         if (rows.length > 10000) {
           setError("File terlalu besar. Maksimal 10.000 baris per batch.");
           setStep("setup");
+          uploadInFlight.current = false;
           return;
         }
 
@@ -153,6 +159,7 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
         if (r.error) {
           setError(r.error);
           setStep("setup");
+          uploadInFlight.current = false;
           return;
         }
 
@@ -160,6 +167,8 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
         setResult({ batchId: r.data!.id, rows: rows.length });
         setStep("done");
 
+        // Biarkan uploadInFlight.current = true — biar tidak bisa upload lagi
+        // sampai user navigasi away
         setTimeout(() => {
           onClose();
           window.location.href = `/admin/migration/${r.data!.id}`;
@@ -167,10 +176,14 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setStep("setup");
+        uploadInFlight.current = false;
       }
     });
   }
 
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <Modal
       open
@@ -183,7 +196,10 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
             <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={onUpload} disabled={pending || !file}>
+            <Button
+              onClick={onUpload}
+              disabled={pending || !file || step !== "setup"}
+            >
               {pending ? "Uploading..." : "Upload & Preview"}
             </Button>
           </>
@@ -255,8 +271,10 @@ async function parseFile(f: File): Promise<Record<string, unknown>[]> {
           <div className="text-xs text-[#8E8E93] bg-[#F6F6F7] dark:bg-[#2C2C2E] border border-[#E5E5EA] dark:border-[#2C2C2E] rounded-lg p-3 leading-relaxed">
             File akan diupload ke <strong>staging area</strong>. Anda dapat
             mereview kolom, memperbaiki error, dan melihat preview sebelum
-            commit ke database. <strong>Tidak ada data yang masuk ke tabel
-            utama sampai Anda klik Commit.</strong>
+            commit ke database.{" "}
+            <strong>
+              Tidak ada data yang masuk ke tabel utama sampai Anda klik Commit.
+            </strong>
           </div>
 
           {error && (

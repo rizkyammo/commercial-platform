@@ -1,0 +1,20 @@
+code,name,type,tax_no,address,phone,email,industry,payment_term_days,credit_limit,pic_name,notes
+AMNT,PT Amman Mineral Nusa Tenggara,CORPORATE,,,,,Mining,30,0,,Migrasi Project Cost AMNT 2025
+KNI,PT KNI,CORPORATE,,,,,Mining,30,0,,Dual-role: vendor AN & counterparty license fee
+KPP-INDEXIM,KPP - PT Indexim Coalindo,CORPORATE,,,,,Mining,30,0,,Flow BCM
+PAMA-BAYA,PT Pamapersada Nusantara - Baya,CORPORATE,,,,,Mining,30,0,,
+PAMA-BERAU,PT Pamapersada Nusantara - Berau,CORPORATE,,,,,Mining,30,0,,
+PETROSEA,PT Petrosea Tbk,CORPORATE,,,,,Mining,30,0,,Flow BCM
+KIDECO,PT Kideco Jaya Agung,CORPORATE,,,,,Mining,30,0,,Flow Consignment
+SSM,SSM,CORPORATE,,,,,Mining,30,0,,
+SCG-TSS,SCG - TSS,CORPORATE,,,,,Mining,30,0,,
+BBP,BBP,CORPORATE,,,,,Mining,30,0,,
+MRIA,MRIA,CORPORATE,,,,,Mining,30,0,,
+ABA,ABA,CORPORATE,,,,,Mining,30,0,,
+BMN,BMN,CORPORATE,,,,,Mining,30,0,,
+BEH,BEH,CORPORATE,,,,,Mining,30,0,,
+DPW,DPW,CORPORATE,,,,,Mining,30,0,,
+GMJI,GMJI,CORPORATE,,,,,Mining,30,0,,
+IBP,IBP,CORPORATE,,,,,Mining,30,0,,
+PMB,PMB,CORPORATE,,,,,Mining,30,0,,
+OMS,OMS,CORPORATE,,,,,Mining,30,0,,Customer backcharge urea + jasa mixing

@@ -19,6 +19,7 @@ const NAV = [
   { label: "Flow", href: "/flow" },
   { label: "Compliance", href: "/compliance" },
   { label: "Invoicing", href: "/invoicing" },
+  { label: "Projects", href: "/projects" },
   { label: "Spatial", href: "/spatial" },
   { label: "Analytics", href: "/analytics" },
   { label: "Reports", href: "/reports" },
@@ -35,7 +36,7 @@ export function TopNav({
   unread?: number;
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-white dark:bg-[#1C1C1E] dark:bg-[#1C1C1E]/95 dark:bg-[#1C1C1E]/95 backdrop-blur border-b border-[#E5E5EA] dark:border-[#2C2C2E] dark:border-[#2C2C2E] dark:border-[#2C2C2E]">
+    <header className="sticky top-0 z-40 bg-white dark:bg-[#1C1C1E]/95 backdrop-blur border-b border-[#E5E5EA] dark:border-[#2C2C2E]">
       <div className="mx-auto max-w-[1440px] px-6 h-16 flex items-center gap-8">
         {/* Brand Logo */}
         <Link
@@ -43,16 +44,16 @@ export function TopNav({
           className="font-semibold tracking-tight text-lg inline-flex items-center gap-0.5 shrink-0"
         >
           <span className="text-[#0A84FF]">Ammo</span>
-          <span className="text-[#1D1D1F] dark:text-[#F5F5F7] dark:text-[#F5F5F7]">Biz</span>
+          <span className="text-[#1D1D1F] dark:text-[#F5F5F7]">Biz</span>
         </Link>
 
         {/* Primary Navigation */}
-        <nav className="hidden lg:flex items-center gap-6 text-sm text-[#6E6E73] dark:text-[#8E8E93] dark:text-[#8E8E93]">
+        <nav className="hidden lg:flex items-center gap-6 text-sm text-[#6E6E73] dark:text-[#8E8E93]">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="hover:text-[#1D1D1F] dark:text-[#F5F5F7] dark:hover:text-[#F5F5F7] transition"
+              className="hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] transition"
             >
               {item.label}
             </Link>

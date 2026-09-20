@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -76,9 +76,16 @@ export function BatchDetailClient({
     });
   }
 
-  function doCommit() {
-    setError(null);
-    startTransition(async () => {
+// Guard: cegah double-submit (React StrictMode / rapid double-click)
+const commitInFlight = useRef(false);
+
+function doCommit() {
+  if (commitInFlight.current) return;
+  commitInFlight.current = true;
+
+  setError(null);
+  startTransition(async () => {
+    try {
       const r = await commitBatch(batch.id, includeWarnings);
       if (r.error) {
         setError(r.error);
@@ -86,8 +93,14 @@ export function BatchDetailClient({
       }
       setShowCommit(false);
       router.refresh();
-    });
-  }
+    } finally {
+      // Beri jeda sebelum boleh commit lagi (untuk safety)
+      setTimeout(() => {
+        commitInFlight.current = false;
+      }, 1500);
+    }
+  });
+}
 
   function doDelete() {
     if (!confirm("Hapus batch ini? Tindakan tidak dapat dibatalkan.")) return;

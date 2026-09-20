@@ -9,24 +9,20 @@ export type EntityType =
   | "transporters"
   | "contracts"
   | "orders"
-  | "order_items";
+  | "order_items"
+  | "procurements"
+  | "procurement_items"
+  | "shipments"
+  | "deliveries"
+  | "basts"
+  | "invoices";
 
 export type BatchStatus =
-  | "UPLOADED"
-  | "MAPPED"
-  | "VALIDATED"
-  | "COMMITTED"
-  | "PARTIAL"
-  | "FAILED"
-  | "ROLLED_BACK";
+  | "UPLOADED" | "MAPPED" | "VALIDATED" | "COMMITTED"
+  | "PARTIAL" | "FAILED" | "ROLLED_BACK";
 
 export type RowStatus =
-  | "PENDING"
-  | "VALID"
-  | "WARNING"
-  | "ERROR"
-  | "COMMITTED"
-  | "SKIPPED";
+  | "PENDING" | "VALID" | "WARNING" | "ERROR" | "COMMITTED" | "SKIPPED";
 
 export type MigrationBatch = {
   id: string;
@@ -64,136 +60,207 @@ export type StagingRow = {
   updated_at: string;
 };
 
-// ============================================================
-// FIELD DEFINITIONS PER ENTITY
-// ============================================================
 export type FieldDef = {
   key: string;
   label: string;
   required?: boolean;
   type: "string" | "number" | "date" | "boolean" | "email";
-  aliases?: string[]; // untuk auto-match header
+  aliases?: string[];
 };
 
+// ============================================================
+// ENTITY FIELDS
+// ============================================================
 export const ENTITY_FIELDS: Record<EntityType, FieldDef[]> = {
-  // ============================================================
-  // CUSTOMERS
-  // ============================================================
   customers: [
-    { key: "code", label: "Customer Code", required: true, type: "string", aliases: ["kode", "kode_customer", "customer_code", "cust_code"] },
-    { key: "name", label: "Customer Name", required: true, type: "string", aliases: ["nama", "nama_customer", "customer_name", "nama_perusahaan"] },
-    { key: "type", label: "Type", type: "string", aliases: ["tipe", "jenis"] },
-    { key: "tax_no", label: "Tax No", type: "string", aliases: ["npwp", "tax_id", "nobp"] },
-    { key: "address", label: "Address", type: "string", aliases: ["alamat"] },
-    { key: "phone", label: "Phone", type: "string", aliases: ["telepon", "telp", "no_telp", "no_hp"] },
-    { key: "email", label: "Email", type: "email", aliases: ["email_address", "e-mail", "surel"] },
-    { key: "industry", label: "Industry", type: "string", aliases: ["industri", "bidang"] },
-    { key: "payment_term_days", label: "Payment Term (days)", type: "number", aliases: ["top", "term", "payment_term", "tempo"] },
-    { key: "credit_limit", label: "Credit Limit", type: "number", aliases: ["limit", "credit", "limit_kredit"] },
-    { key: "pic_name", label: "PIC Name", type: "string", aliases: ["pic", "contact_person", "contact", "nama_pic"] },
-    { key: "notes", label: "Notes", type: "string", aliases: ["keterangan", "catatan"] },
+    { key: "code", label: "Customer Code", required: true, type: "string" },
+    { key: "name", label: "Customer Name", required: true, type: "string" },
+    { key: "type", label: "Type", type: "string" },
+    { key: "tax_no", label: "Tax No", type: "string" },
+    { key: "address", label: "Address", type: "string" },
+    { key: "phone", label: "Phone", type: "string" },
+    { key: "email", label: "Email", type: "email" },
+    { key: "industry", label: "Industry", type: "string" },
+    { key: "payment_term_days", label: "Payment Term (days)", type: "number" },
+    { key: "credit_limit", label: "Credit Limit", type: "number" },
+    { key: "pic_name", label: "PIC Name", type: "string" },
+    { key: "notes", label: "Notes", type: "string" },
   ],
 
-  // ============================================================
-  // SITES
-  // ============================================================
   sites: [
-    { key: "code", label: "Site Code", required: true, type: "string", aliases: ["kode", "kode_site", "site_code"] },
-    { key: "name", label: "Site Name", required: true, type: "string", aliases: ["nama", "nama_site", "site_name"] },
-    { key: "customer_code", label: "Customer Code", required: true, type: "string", aliases: ["kode_customer", "customer", "customer_code"] },
-    { key: "latitude", label: "Latitude", type: "number", aliases: ["lat"] },
-    { key: "longitude", label: "Longitude", type: "number", aliases: ["lng", "long", "lon"] },
-    { key: "address", label: "Address", type: "string", aliases: ["alamat"] },
-    { key: "province", label: "Province", type: "string", aliases: ["provinsi", "propinsi"] },
-    { key: "city", label: "City", type: "string", aliases: ["kota", "kabupaten", "kab"] },
-    { key: "business_model", label: "Business Model", type: "string", aliases: ["model_bisnis", "model"] },
-    { key: "site_status", label: "Site Status", type: "string", aliases: ["status", "status_site"] },
+    { key: "code", label: "Site Code", required: true, type: "string" },
+    { key: "name", label: "Site Name", required: true, type: "string" },
+    { key: "customer_code", label: "Customer Code", required: true, type: "string" },
+    { key: "latitude", label: "Latitude", type: "number" },
+    { key: "longitude", label: "Longitude", type: "number" },
+    { key: "address", label: "Address", type: "string" },
+    { key: "province", label: "Province", type: "string" },
+    { key: "city", label: "City", type: "string" },
+    { key: "business_model", label: "Business Model", type: "string" },
+    { key: "site_status", label: "Site Status", type: "string" },
   ],
 
-  // ============================================================
-  // PRODUCTS
-  // ============================================================
   products: [
-    { key: "code", label: "Product Code", required: true, type: "string", aliases: ["kode", "kode_produk", "product_code", "sku"] },
-    { key: "name", label: "Product Name", required: true, type: "string", aliases: ["nama", "nama_produk", "product_name"] },
-    { key: "category", label: "Category", type: "string", aliases: ["kategori"] },
-    { key: "uom", label: "UOM", required: true, type: "string", aliases: ["satuan", "unit", "sat"] },
-    { key: "description", label: "Description", type: "string", aliases: ["deskripsi", "keterangan"] },
+    { key: "code", label: "Product Code", required: true, type: "string" },
+    { key: "name", label: "Product Name", required: true, type: "string" },
+    { key: "category", label: "Category", type: "string" },
+    { key: "uom", label: "UOM", required: true, type: "string" },
+    { key: "description", label: "Description", type: "string" },
   ],
 
-  // ============================================================
-  // VENDORS
-  // ============================================================
   vendors: [
-    { key: "code", label: "Vendor Code", required: true, type: "string", aliases: ["kode", "kode_vendor", "vendor_code"] },
-    { key: "name", label: "Vendor Name", required: true, type: "string", aliases: ["nama", "nama_vendor", "vendor_name"] },
-    { key: "type", label: "Type", type: "string", aliases: ["tipe"] },
-    { key: "tax_no", label: "Tax No", type: "string", aliases: ["npwp"] },
-    { key: "email", label: "Email", type: "email", aliases: [] },
-    { key: "phone", label: "Phone", type: "string", aliases: ["telepon", "telp"] },
-    { key: "contact_person", label: "Contact Person", type: "string", aliases: ["pic", "contact"] },
-    { key: "address", label: "Address", type: "string", aliases: ["alamat"] },
+    { key: "code", label: "Vendor Code", required: true, type: "string" },
+    { key: "name", label: "Vendor Name", required: true, type: "string" },
+    { key: "type", label: "Type", type: "string" },
+    { key: "tax_no", label: "Tax No", type: "string" },
+    { key: "email", label: "Email", type: "email" },
+    { key: "phone", label: "Phone", type: "string" },
+    { key: "contact_person", label: "Contact Person", type: "string" },
+    { key: "address", label: "Address", type: "string" },
   ],
 
-  // ============================================================
-  // TRANSPORTERS
-  // ============================================================
   transporters: [
-    { key: "code", label: "Code", required: true, type: "string", aliases: ["kode", "kode_transporter"] },
-    { key: "name", label: "Name", required: true, type: "string", aliases: ["nama", "nama_transporter"] },
-    { key: "vehicle_type", label: "Vehicle Type", type: "string", aliases: ["tipe_kendaraan"] },
-    { key: "plate_number", label: "Plate Number", type: "string", aliases: ["plat", "plat_nomor", "nopol", "no_polisi"] },
-    { key: "phone", label: "Phone", type: "string", aliases: ["telepon", "telp"] },
+    { key: "code", label: "Code", required: true, type: "string" },
+    { key: "name", label: "Name", required: true, type: "string" },
+    { key: "vehicle_type", label: "Vehicle Type", type: "string" },
+    { key: "plate_number", label: "Plate Number", type: "string" },
+    { key: "phone", label: "Phone", type: "string" },
   ],
 
-  // ============================================================
-  // CONTRACTS
-  // ============================================================
   contracts: [
-    { key: "code", label: "Contract Code", required: true, type: "string", aliases: ["kode", "kode_kontrak", "contract_code"] },
-    { key: "name", label: "Contract Name", required: true, type: "string", aliases: ["nama", "nama_kontrak"] },
-    { key: "customer_code", label: "Customer Code", required: true, type: "string", aliases: ["kode_customer", "customer"] },
-    { key: "site_code", label: "Site Code", type: "string", aliases: ["kode_site", "site"] },
-    { key: "contract_number", label: "Contract Number", type: "string", aliases: ["no_kontrak", "nomor", "no"] },
-    { key: "start_date", label: "Start Date", type: "date", aliases: ["tanggal_mulai", "tgl_mulai", "start"] },
-    { key: "end_date", label: "End Date", type: "date", aliases: ["tanggal_selesai", "tgl_selesai", "end"] },
-    { key: "value", label: "Value", type: "number", aliases: ["nilai", "contract_value", "amount"] },
-    { key: "currency", label: "Currency", type: "string", aliases: ["mata_uang", "curr"] },
-    { key: "status", label: "Status", type: "string", aliases: [] },
-    { key: "notes", label: "Notes", type: "string", aliases: ["keterangan", "catatan"] },
+    { key: "code", label: "Contract Code", required: true, type: "string" },
+    { key: "name", label: "Contract Name", required: true, type: "string" },
+    { key: "customer_code", label: "Customer Code", required: true, type: "string" },
+    { key: "site_code", label: "Site Code", type: "string" },
+    { key: "contract_number", label: "Contract Number", type: "string" },
+    { key: "start_date", label: "Start Date", type: "date" },
+    { key: "end_date", label: "End Date", type: "date" },
+    { key: "value", label: "Value", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "notes", label: "Notes", type: "string" },
   ],
 
-  // ============================================================
-  // ORDERS
-  // ============================================================
   orders: [
-    { key: "po_number", label: "PO Number", required: true, type: "string", aliases: ["no_po", "po_no", "po"] },
-    { key: "po_date", label: "PO Date", type: "date", aliases: ["tanggal_po", "tgl_po"] },
-    { key: "customer_code", label: "Customer Code", required: true, type: "string", aliases: ["kode_customer"] },
-    { key: "site_code", label: "Site Code", required: true, type: "string", aliases: ["kode_site"] },
-    { key: "contract_code", label: "Contract Code", type: "string", aliases: ["kode_kontrak"] },
-    { key: "business_model", label: "Business Model", type: "string", aliases: ["model_bisnis"] },
-    { key: "currency", label: "Currency", type: "string", aliases: ["mata_uang"] },
-    { key: "exchange_rate", label: "Exchange Rate", type: "number", aliases: ["kurs"] },
-    { key: "remarks", label: "Remarks", type: "string", aliases: ["keterangan", "catatan"] },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "po_number", label: "PO Number", type: "string" },
+    { key: "po_date", label: "PO Date", type: "date" },
+    { key: "customer_code", label: "Customer Code", required: true, type: "string" },
+    { key: "site_code", label: "Site Code", type: "string" },
+    { key: "contract_code", label: "Contract Code", type: "string" },
+    { key: "business_model", label: "Business Model", type: "string" },
+    { key: "order_type", label: "Order Type", type: "string" },
+    { key: "project_code", label: "Project Code", type: "string" },
+    { key: "project_name", label: "Project Name", type: "string" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "exchange_rate", label: "Exchange Rate", type: "number" },
+    { key: "selling_value", label: "Selling Value", type: "number" },
+    { key: "total_direct_cost", label: "Total Direct Cost", type: "number" },
+    { key: "margin", label: "Margin", type: "number" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "po_status", label: "PO Status", type: "string" },
+    { key: "current_stage", label: "Current Stage", type: "string" },
+    { key: "remarks", label: "Remarks", type: "string" },
   ],
 
-  // ============================================================
-  // ORDER ITEMS
-  // ============================================================
   order_items: [
-    { key: "po_number", label: "PO Number", required: true, type: "string", aliases: ["no_po", "po"] },
-    { key: "product_code", label: "Product Code", required: true, type: "string", aliases: ["kode_produk"] },
-    { key: "qty", label: "Qty", required: true, type: "number", aliases: ["quantity", "jumlah", "qty_order"] },
-    { key: "uom", label: "UOM", type: "string", aliases: ["satuan"] },
-    { key: "unit_price", label: "Unit Price", type: "number", aliases: ["harga", "harga_satuan", "price"] },
-    { key: "currency", label: "Currency", type: "string", aliases: ["mata_uang"] },
-    { key: "description", label: "Description", type: "string", aliases: ["keterangan"] },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "product_code", label: "Product Code", required: true, type: "string" },
+    { key: "qty", label: "Qty", required: true, type: "number" },
+    { key: "uom", label: "UOM", type: "string" },
+    { key: "unit_price", label: "Unit Price", type: "number" },
+    { key: "unit_price_idr", label: "Unit Price IDR", type: "number" },
+    { key: "unit_cost", label: "Unit Cost", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "exchange_rate", label: "Exchange Rate", type: "number" },
+    { key: "line_value", label: "Line Value", type: "number" },
+    { key: "line_type", label: "Line Type", type: "string" },
+    { key: "margin_type", label: "Margin Type", type: "string" },
+    { key: "description", label: "Description", type: "string" },
+  ],
+
+  procurements: [
+    { key: "procurement_number", label: "Procurement Number", required: true, type: "string" },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "vendor_code", label: "Vendor Code", type: "string" },
+    { key: "vendor_po", label: "Vendor PO", type: "string" },
+    { key: "reference_date", label: "Reference Date", type: "date" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "material_cost", label: "Material Cost", type: "number" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "remarks", label: "Remarks", type: "string" },
+  ],
+
+  procurement_items: [
+    { key: "procurement_number", label: "Procurement Number", required: true, type: "string" },
+    { key: "product_code", label: "Product Code", required: true, type: "string" },
+    { key: "qty", label: "Qty", required: true, type: "number" },
+    { key: "uom", label: "UOM", type: "string" },
+    { key: "unit_price", label: "Unit Price", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "exchange_rate", label: "Exchange Rate", type: "number" },
+    { key: "line_value", label: "Line Value", type: "number" },
+    { key: "description", label: "Description", type: "string" },
+  ],
+
+  shipments: [
+    { key: "shipment_number", label: "Shipment Number", required: true, type: "string" },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "shipment_date", label: "Shipment Date", type: "date" },
+    { key: "transporter_code", label: "Transporter Code", type: "string" },
+    { key: "origin", label: "Origin", type: "string" },
+    { key: "destination", label: "Destination", type: "string" },
+    { key: "transport_cost", label: "Transport Cost", type: "number" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "remarks", label: "Remarks", type: "string" },
+  ],
+
+  basts: [
+    { key: "bast_number", label: "BAST Number", required: true, type: "string" },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "bast_date", label: "BAST Date", type: "date" },
+    { key: "receiver_name", label: "Receiver Name", type: "string" },
+    { key: "signed_by", label: "Signed By", type: "string" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "remarks", label: "Remarks", type: "string" },
+  ],
+  
+    deliveries: [
+    { key: "delivery_number", label: "Delivery Number", required: true, type: "string" },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "shipment_number", label: "Shipment Number", required: true, type: "string" },
+    { key: "delivery_date", label: "Delivery Date", required: true, type: "date" },
+    { key: "receiving_party", label: "Receiving Party", type: "string" },
+    { key: "delivery_note", label: "Delivery Note", type: "string" },
+    { key: "location", label: "Location", type: "string" },
+    { key: "remarks", label: "Remarks", type: "string" },
+    { key: "status", label: "Status", type: "string" },
+  ],
+
+  invoices: [
+    { key: "invoice_number", label: "Invoice Number", required: true, type: "string" },
+    { key: "invoice_ref", label: "Invoice Ref", type: "string" },
+    { key: "order_number", label: "Order Number", required: true, type: "string" },
+    { key: "customer_code", label: "Customer Code", required: true, type: "string" },
+    { key: "invoice_type", label: "Invoice Type", type: "string" },
+    { key: "invoice_date", label: "Invoice Date", required: true, type: "date" },
+    { key: "due_date", label: "Due Date", type: "date" },
+    { key: "payment_term_days", label: "Payment Term (days)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "exchange_rate", label: "Exchange Rate", type: "number" },
+    { key: "amount", label: "Amount (DPP)", type: "number" },
+    { key: "tax_rate", label: "Tax Rate (%)", type: "number" },
+    { key: "tax_amount", label: "Tax Amount", type: "number" },
+    { key: "amount_with_tax", label: "Amount + Tax", type: "number" },
+    { key: "amount_idr", label: "Amount IDR", type: "number" },
+    { key: "paid_amount", label: "Paid Amount", type: "number" },
+    { key: "status", label: "Status", type: "string" },
+    { key: "notes", label: "Notes", type: "string" },
   ],
 };
 
 // ============================================================
-// NORMALIZE HEADER
+// NORMALIZE / AUTO-MATCH (tidak berubah)
 // ============================================================
 function normalizeHeader(s: string): string {
   return String(s ?? "")
@@ -204,9 +271,6 @@ function normalizeHeader(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
-// ============================================================
-// AUTO-MATCH
-// ============================================================
 export function autoMatchHeaders(
   headers: string[],
   entityType: EntityType
@@ -215,51 +279,22 @@ export function autoMatchHeaders(
   const mapping: Record<string, string> = {};
 
   for (const header of headers) {
-    // FIX: kalau header mengandung koma/semicolon (gabungan), split dulu
-    const parts = String(header)
-      .split(/[,;|\t]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    // Kalau cuma 1 → match biasa
-    // Kalau > 1 → match setiap part, tapi tetap simpan key = header asli
-    // (untuk fallback — tidak akan terjadi kalau parse benar)
-
     const norm = normalizeHeader(header);
     let matched = false;
 
     for (const field of fields) {
-      if (norm === normalizeHeader(field.key)) {
-        mapping[header] = field.key;
-        matched = true;
-        break;
-      }
-      if (norm === normalizeHeader(field.label)) {
-        mapping[header] = field.key;
-        matched = true;
-        break;
-      }
+      if (norm === normalizeHeader(field.key)) { mapping[header] = field.key; matched = true; break; }
+      if (norm === normalizeHeader(field.label)) { mapping[header] = field.key; matched = true; break; }
       for (const alias of field.aliases ?? []) {
-        if (norm === normalizeHeader(alias)) {
-          mapping[header] = field.key;
-          matched = true;
-          break;
-        }
+        if (norm === normalizeHeader(alias)) { mapping[header] = field.key; matched = true; break; }
       }
       if (matched) break;
     }
 
-    // Fuzzy match
     if (!matched) {
       for (const field of fields) {
-        const candidates = [field.key, field.label, ...(field.aliases ?? [])].map(
-          normalizeHeader
-        );
-        if (
-          candidates.some(
-            (c) => c.length >= 4 && (norm.includes(c) || c.includes(norm))
-          )
-        ) {
+        const candidates = [field.key, field.label, ...(field.aliases ?? [])].map(normalizeHeader);
+        if (candidates.some((c) => c.length >= 4 && (norm.includes(c) || c.includes(norm)))) {
           mapping[header] = field.key;
           matched = true;
           break;

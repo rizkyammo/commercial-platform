@@ -5,20 +5,88 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAudit } from "@/lib/audit";
 import { ENTITY_FIELDS, autoMatchHeaders, type EntityType } from "./types";
+import mappings from "./mappings.json";
+
+// ============================================================
+// ENTITIES DENGAN KOLOM `code` UNIQUE
+// ============================================================
+const ENTITIES_WITH_CODE = new Set<EntityType>([
+  "customers",
+  "sites",
+  "products",
+  "vendors",
+  "transporters",
+  "contracts",
+]);
+
+// Pseudo-column yang hanya untuk FK resolution (bukan kolom asli DB)
+const FK_CODE_FIELDS = new Set([
+  "customer_code",
+  "site_code",
+  "product_code",
+  "contract_code",
+  "vendor_code",
+  "transporter_code",
+  "order_number",
+  "shipment_number",
+  "procurement_number",   // ← TAMBAH
+]);
 
 // ============================================================
 // HELPER: Check admin
 // ============================================================
 async function requireAdmin() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized", user: null };
 
   const { data: perms } = await supabase.rpc("current_user_permissions");
   if (!((perms ?? []) as string[]).includes("USER_MANAGE")) {
-    return { error: "Hanya admin yang dapat mengakses migration.", user: null };
+    return {
+      error: "Hanya admin yang dapat mengakses migration.",
+      user: null,
+    };
   }
   return { user, error: null };
+}
+
+// ============================================================
+// COLUMN MAPPING RESOLVER
+// Prioritas: mappings.json → fallback autoMatchHeaders
+// ============================================================
+function normalizeKey(s: string): string {
+  return String(s ?? "")
+    .replace(/^\uFEFF/, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_\-\.]+/g, "");
+}
+
+function resolveColumnMapping(
+  headers: string[],
+  entityType: EntityType
+): Record<string, string> {
+  const preset = (mappings as Record<string, Record<string, string>>)[
+    entityType
+  ];
+
+  const auto = autoMatchHeaders(headers, entityType);
+
+  if (!preset) return auto;
+
+  const presetLookup = new Map<string, string>();
+  for (const [srcHeader, targetField] of Object.entries(preset)) {
+    presetLookup.set(normalizeKey(srcHeader), targetField);
+  }
+
+  const result: Record<string, string> = {};
+  for (const h of headers) {
+    const fromPreset = presetLookup.get(normalizeKey(h));
+    result[h] = fromPreset ?? auto[h] ?? "";
+  }
+  return result;
 }
 
 // ============================================================
@@ -37,7 +105,27 @@ export async function createMigrationBatch(input: {
   const supabase = await createClient();
 
   const headers = Object.keys(input.rows[0] ?? {});
-  const column_mapping = autoMatchHeaders(headers, input.entity_type);
+  const column_mapping = resolveColumnMapping(headers, input.entity_type);
+
+  // ------------------------------------------------------------
+  // Guard anti-double-submit: tolak upload identik dalam window 30 detik
+  // ------------------------------------------------------------
+  const thirtySecAgo = new Date(Date.now() - 30_000).toISOString();
+  const { count: recentDuplicate } = await supabase
+    .from("migration_batches")
+    .select("id", { count: "exact", head: true })
+    .eq("entity_type", input.entity_type)
+    .eq("file_name", input.file_name)
+    .eq("row_count", input.rows.length)
+    .eq("uploaded_by", user.id)
+    .gte("uploaded_at", thirtySecAgo);
+
+  if ((recentDuplicate ?? 0) > 0) {
+    return {
+      error:
+        "Upload ini terdeteksi duplikat. Batch dengan file & row count yang sama baru saja dibuat dalam 30 detik terakhir. Tunggu sebentar lalu refresh halaman.",
+    };
+  }
 
   const { data: batch, error: batchErr } = await supabase
     .from("migration_batches")
@@ -136,7 +224,6 @@ export async function validateBatch(batchId: string) {
   const mapping = (batch.column_mapping ?? {}) as Record<string, string>;
   const fields = ENTITY_FIELDS[entityType];
 
-  // Fetch all staging rows
   const { data: rows } = await supabase
     .from("migration_staging")
     .select("*")
@@ -147,14 +234,30 @@ export async function validateBatch(batchId: string) {
     return { error: "Tidak ada data." };
   }
 
-  // Preload reference data
-  const [customers, sites, products, contracts, orders] = await Promise.all([
-    supabase.from("customers").select("id, code"),
-    supabase.from("sites").select("id, code, customer_id"),
-    supabase.from("products").select("id, code"),
-    supabase.from("contracts").select("id, code, customer_id"),
-    supabase.from("orders").select("id, po_number"),
-  ]);
+  // ------------------------------------------------------------
+  // Preload reference data (semua entity untuk FK resolution)
+  // ------------------------------------------------------------
+const [
+  customers,
+  sites,
+  products,
+  contracts,
+  orders,
+  vendors,
+  transporters,
+  shipments,
+  procurements,
+] = await Promise.all([
+  supabase.from("customers").select("id, code"),
+  supabase.from("sites").select("id, code, customer_id"),
+  supabase.from("products").select("id, code"),
+  supabase.from("contracts").select("id, code, customer_id"),
+  supabase.from("orders").select("id, order_number"),
+  supabase.from("vendors").select("id, code"),
+  supabase.from("transporters").select("id, code"),
+  supabase.from("shipments").select("id, shipment_number"),
+  supabase.from("procurements").select("id, procurement_number"),
+]);
 
   const customerMap = new Map(
     (customers.data ?? []).map((c) => [c.code.toLowerCase(), c.id])
@@ -169,47 +272,64 @@ export async function validateBatch(batchId: string) {
     (contracts.data ?? []).map((c) => [c.code.toLowerCase(), c.id])
   );
   const orderMap = new Map(
-    (orders.data ?? []).map((o) => [o.po_number?.toLowerCase() ?? "", o.id])
+    (orders.data ?? []).map((o) => [
+      o.order_number?.toLowerCase() ?? "",
+      o.id,
+    ])
   );
+  const vendorMap = new Map(
+    (vendors.data ?? []).map((v) => [v.code.toLowerCase(), v.id])
+  );
+  const transporterMap = new Map(
+    (transporters.data ?? []).map((t) => [t.code.toLowerCase(), t.id])
+  );
+  const shipmentMap = new Map(
+    (shipments.data ?? []).map((s) => [
+      s.shipment_number?.toLowerCase() ?? "",
+      s.id,
+    ])
+  );
+const procurementMap = new Map<string, string>(
+  (procurements.data ?? []).map((p: { id: string; procurement_number: string | null }) => [
+    p.procurement_number?.toLowerCase() ?? "",
+    p.id,
+  ])
+);
+  // ------------------------------------------------------------
+  // Duplicate detection setup
+  // ------------------------------------------------------------
+  const existingCodes = new Set<string>();
+  const existingNames = new Set<string>();
+  const existingPOs = new Set<string>();
 
-  // Existing codes (untuk duplicate detection)
-// ============================================================
-// DUPLICATE DETECTION SETUP
-// ============================================================
-const existingCodes = new Set<string>();
-const existingNames = new Set<string>();    // opsional: cek by name
-const existingPOs = new Set<string>();      // untuk entity yang pakai po_number
-
-if (
-  ["customers", "products", "vendors", "transporters", "contracts"].includes(
-    entityType
-  )
-) {
-  const { data: existing } = await supabase
-    .from(entityType)
-    .select("code, name");
-  for (const e of existing ?? []) {
-    const code = (e as { code: string }).code;
-    const name = (e as { name?: string }).name;
-    if (code) existingCodes.add(code.toLowerCase());
-    if (name) existingNames.add(name.toLowerCase().trim());
+  if (
+    ["customers", "products", "vendors", "transporters", "contracts"].includes(
+      entityType
+    )
+  ) {
+    const { data: existing } = await supabase
+      .from(entityType)
+      .select("code, name");
+    for (const e of existing ?? []) {
+      const code = (e as { code: string }).code;
+      const name = (e as { name?: string }).name;
+      if (code) existingCodes.add(code.toLowerCase());
+      if (name) existingNames.add(name.toLowerCase().trim());
+    }
   }
-}
 
-// Order / order_items pakai po_number sebagai identifier
-if (["orders", "order_items"].includes(entityType)) {
-  const { data: existing } = await supabase
-    .from("orders")
-    .select("po_number");
-  for (const e of existing ?? []) {
-    const po = (e as { po_number: string | null }).po_number;
-    if (po) existingPOs.add(po.toLowerCase());
+  if (["orders", "order_items"].includes(entityType)) {
+    const { data: existing } = await supabase
+      .from("orders")
+      .select("po_number");
+    for (const e of existing ?? []) {
+      const po = (e as { po_number: string | null }).po_number;
+      if (po) existingPOs.add(po.toLowerCase());
+    }
   }
-}
 
-// Track untuk duplikat dalam batch ini juga
-const seenCodesInBatch = new Map<string, number>(); // code → row_index pertama
-const seenPOsInBatch = new Map<string, number>();
+  const seenCodesInBatch = new Map<string, number>();
+  const seenPOsInBatch = new Map<string, number>();
 
   let validCount = 0;
   let warningCount = 0;
@@ -258,7 +378,8 @@ const seenPOsInBatch = new Map<string, number>();
         else mapped[field.key] = num;
       } else if (field.type === "date") {
         const d = new Date(String(v));
-        if (isNaN(d.getTime())) errors.push(`${field.label} bukan tanggal valid`);
+        if (isNaN(d.getTime()))
+          errors.push(`${field.label} bukan tanggal valid`);
         else mapped[field.key] = d.toISOString().slice(0, 10);
       } else if (field.type === "email") {
         const email = String(v);
@@ -274,7 +395,9 @@ const seenPOsInBatch = new Map<string, number>();
       }
     }
 
-    // Foreign key lookups
+    // ------------------------------------------------------------
+    // FK LOOKUPS
+    // ------------------------------------------------------------
     if (mapped.customer_code) {
       const code = String(mapped.customer_code).toLowerCase();
       if (!customerMap.has(code)) {
@@ -283,6 +406,7 @@ const seenPOsInBatch = new Map<string, number>();
         mapped.customer_id = customerMap.get(code);
       }
     }
+
     if (mapped.site_code) {
       const code = String(mapped.site_code).toLowerCase();
       if (!siteMap.has(code)) {
@@ -291,6 +415,7 @@ const seenPOsInBatch = new Map<string, number>();
         mapped.site_id = siteMap.get(code);
       }
     }
+
     if (mapped.product_code) {
       const code = String(mapped.product_code).toLowerCase();
       if (!productMap.has(code)) {
@@ -299,6 +424,7 @@ const seenPOsInBatch = new Map<string, number>();
         mapped.product_id = productMap.get(code);
       }
     }
+
     if (mapped.contract_code) {
       const code = String(mapped.contract_code).toLowerCase();
       if (!contractMap.has(code)) {
@@ -307,66 +433,103 @@ const seenPOsInBatch = new Map<string, number>();
         mapped.contract_id = contractMap.get(code);
       }
     }
-    if (mapped.po_number && entityType === "order_items") {
-      const po = String(mapped.po_number).toLowerCase();
-      if (!orderMap.has(po)) {
-        errors.push(`Order dengan PO "${mapped.po_number}" tidak ditemukan`);
+
+    // FK: order — dipakai oleh banyak entity
+    if (
+      mapped.order_number &&
+      [
+        "order_items",
+        "procurements",
+        "shipments",
+        "deliveries",
+        "basts",
+        "invoices",
+      ].includes(entityType)
+    ) {
+      const onum = String(mapped.order_number).toLowerCase();
+      if (!orderMap.has(onum)) {
+        errors.push(`Order "${mapped.order_number}" tidak ditemukan`);
       } else {
-        mapped.order_id = orderMap.get(po);
+        mapped.order_id = orderMap.get(onum);
       }
     }
 
-    // Duplicate check
-// ============================================================
-// DUPLICATE CHECK #1 — vs Database Existing
-// ============================================================
-if (mapped.code) {
-  const codeNorm = String(mapped.code).toLowerCase().trim();
-  if (existingCodes.has(codeNorm)) {
-    errors.push(`Code "${mapped.code}" sudah ada di database`);
-  }
-}
-
-// ============================================================
-// DUPLICATE CHECK #2 — vs baris lain dalam batch ini
-// ============================================================
-if (mapped.code) {
-  const codeNorm = String(mapped.code).toLowerCase().trim();
-  const firstOccurrence = seenCodesInBatch.get(codeNorm);
-
-  if (firstOccurrence !== undefined) {
-    errors.push(
-      `Code "${mapped.code}" duplikat dengan baris #${firstOccurrence} dalam file ini`
-    );
-  } else {
-    // Tandai code ini sudah muncul di batch
-    seenCodesInBatch.set(codeNorm, row.row_index);
-  }
-}
-
-// ============================================================
-// DUPLICATE CHECK #3 — untuk orders/order_items (via PO number)
-// ============================================================
-if (mapped.po_number) {
-  const poNorm = String(mapped.po_number).toLowerCase().trim();
-
-  // Cek vs database existing (untuk entity "orders")
-  if (entityType === "orders" && existingPOs.has(poNorm)) {
-    errors.push(`PO Number "${mapped.po_number}" sudah ada di database`);
-  }
-
-  // Cek vs baris lain dalam batch
-  const firstOccurrence = seenPOsInBatch.get(poNorm);
-  if (entityType === "orders") {
-    if (firstOccurrence !== undefined) {
-      errors.push(
-        `PO Number "${mapped.po_number}" duplikat dengan baris #${firstOccurrence} dalam file ini`
-      );
-    } else {
-      seenPOsInBatch.set(poNorm, row.row_index);
+    // FK: vendor — untuk procurements
+    if (mapped.vendor_code && entityType === "procurements") {
+      const vc = String(mapped.vendor_code).toLowerCase();
+      if (!vendorMap.has(vc)) {
+        warnings.push(`Vendor "${mapped.vendor_code}" tidak ditemukan`);
+      } else {
+        mapped.vendor_id = vendorMap.get(vc);
+      }
     }
+
+    // FK: transporter — untuk shipments
+    if (mapped.transporter_code && entityType === "shipments") {
+      const tc = String(mapped.transporter_code).toLowerCase();
+      if (!transporterMap.has(tc)) {
+        warnings.push(`Transporter "${mapped.transporter_code}" tidak ditemukan`);
+      } else {
+        mapped.transporter_id = transporterMap.get(tc);
+      }
+    }
+
+    // FK: shipment — untuk deliveries
+    if (mapped.shipment_number && entityType === "deliveries") {
+      const sn = String(mapped.shipment_number).toLowerCase();
+      if (!shipmentMap.has(sn)) {
+        errors.push(`Shipment "${mapped.shipment_number}" tidak ditemukan`);
+      } else {
+        mapped.shipment_id = shipmentMap.get(sn);
+      }
+    }
+// FK: procurement (dipakai oleh procurement_items)
+if (mapped.procurement_number && entityType === "procurement_items") {
+  const pn = String(mapped.procurement_number).toLowerCase();
+  if (!procurementMap.has(pn)) {
+    errors.push(`Procurement "${mapped.procurement_number}" tidak ditemukan`);
+  } else {
+    mapped.procurement_id = procurementMap.get(pn);
   }
 }
+    // ------------------------------------------------------------
+    // DUPLICATE CHECKS
+    // ------------------------------------------------------------
+    if (mapped.code) {
+      const codeNorm = String(mapped.code).toLowerCase().trim();
+
+      if (existingCodes.has(codeNorm)) {
+        errors.push(`Code "${mapped.code}" sudah ada di database`);
+      }
+
+      const firstOccurrence = seenCodesInBatch.get(codeNorm);
+      if (firstOccurrence !== undefined) {
+        errors.push(
+          `Code "${mapped.code}" duplikat dengan baris #${firstOccurrence} dalam file ini`
+        );
+      } else {
+        seenCodesInBatch.set(codeNorm, row.row_index);
+      }
+    }
+
+    if (mapped.po_number) {
+      const poNorm = String(mapped.po_number).toLowerCase().trim();
+
+      if (entityType === "orders" && existingPOs.has(poNorm)) {
+        errors.push(`PO Number "${mapped.po_number}" sudah ada di database`);
+      }
+
+      if (entityType === "orders") {
+        const firstOccurrence = seenPOsInBatch.get(poNorm);
+        if (firstOccurrence !== undefined) {
+          errors.push(
+            `PO Number "${mapped.po_number}" duplikat dengan baris #${firstOccurrence} dalam file ini`
+          );
+        } else {
+          seenPOsInBatch.set(poNorm, row.row_index);
+        }
+      }
+    }
 
     let status: string;
     if (errors.length > 0) {
@@ -390,9 +553,9 @@ if (mapped.po_number) {
   }
 
   // Batch update staging rows
-  const chunkSize = 200;
-  for (let i = 0; i < updates.length; i += chunkSize) {
-    const chunk = updates.slice(i, i + chunkSize);
+  const updateChunkSize = 200;
+  for (let i = 0; i < updates.length; i += updateChunkSize) {
+    const chunk = updates.slice(i, i + updateChunkSize);
     await Promise.all(
       chunk.map((u) =>
         supabase
@@ -408,7 +571,6 @@ if (mapped.po_number) {
     );
   }
 
-  // Update batch summary
   await supabase
     .from("migration_batches")
     .update({
@@ -446,9 +608,23 @@ export async function commitBatch(batchId: string, includeWarnings = false) {
     .select("*")
     .eq("id", batchId)
     .single();
+
   if (!batch) return { error: "Batch tidak ditemukan." };
   if (batch.status !== "VALIDATED") {
     return { error: "Batch harus divalidasi dulu." };
+  }
+
+  // Guard: cegah re-commit kalau sudah ada row COMMITTED
+  const { count: alreadyCommitted } = await admin
+    .from("migration_staging")
+    .select("id", { count: "exact", head: true })
+    .eq("batch_id", batchId)
+    .eq("status", "COMMITTED");
+
+  if ((alreadyCommitted ?? 0) > 0) {
+    return {
+      error: `Batch ini sudah punya ${alreadyCommitted} row COMMITTED. Tidak boleh commit ulang.`,
+    };
   }
 
   const entityType = batch.entity_type as EntityType;
@@ -465,22 +641,67 @@ export async function commitBatch(batchId: string, includeWarnings = false) {
     return { error: "Tidak ada baris yang bisa di-commit." };
   }
 
+  // ------------------------------------------------------------
+  // Dedupe by `code` untuk entity yang punya kolom code UNIQUE.
+  // ------------------------------------------------------------
+  let dedupedRows = rows;
+  if (ENTITIES_WITH_CODE.has(entityType)) {
+    const seen = new Set<string>();
+    dedupedRows = [];
+    for (const row of rows) {
+      const codeRaw = (row.mapped_data as Record<string, unknown> | null)?.code;
+      const code = String(codeRaw ?? "")
+        .toLowerCase()
+        .trim();
+      if (!code) {
+        dedupedRows.push(row);
+        continue;
+      }
+      if (seen.has(code)) continue;
+      seen.add(code);
+      dedupedRows.push(row);
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Bangun payload insertable — SATU loop saja.
+  // ------------------------------------------------------------
   const insertable: Record<string, unknown>[] = [];
   const rowIds: string[] = [];
 
-  for (const row of rows) {
+  for (const row of dedupedRows) {
     const d = row.mapped_data as Record<string, unknown>;
     const clean: Record<string, unknown> = {};
 
-    for (const f of ENTITY_FIELDS[entityType]) {
-      if (d[f.key] !== undefined) clean[f.key] = d[f.key];
-    }
+// Kolom "code" yang MERUPAKAN kolom asli DB untuk entity tertentu —
+// tidak boleh di-skip walaupun namanya ada di FK_CODE_FIELDS
+const ENTITY_OWN_CODE_COL: Partial<Record<EntityType, string>> = {
+  orders: "order_number",
+  shipments: "shipment_number",
+  procurements: "procurement_number",
+};
 
+for (const f of ENTITY_FIELDS[entityType]) {
+  if (d[f.key] === undefined) continue;
+
+  const ownCode = ENTITY_OWN_CODE_COL[entityType];
+  if (FK_CODE_FIELDS.has(f.key) && f.key !== ownCode) {
+    continue;
+  }
+
+  clean[f.key] = d[f.key];
+}
+
+    // FK resolved columns
     if (d.customer_id) clean.customer_id = d.customer_id;
     if (d.site_id) clean.site_id = d.site_id;
     if (d.product_id) clean.product_id = d.product_id;
     if (d.contract_id) clean.contract_id = d.contract_id;
     if (d.order_id) clean.order_id = d.order_id;
+    if (d.vendor_id) clean.vendor_id = d.vendor_id;
+    if (d.transporter_id) clean.transporter_id = d.transporter_id;
+    if (d.shipment_id) clean.shipment_id = d.shipment_id;
+    if (d.procurement_id) clean.procurement_id = d.procurement_id;   // ← TAMBAH
 
     clean.created_by = user.id;
     clean.updated_by = user.id;
@@ -495,27 +716,19 @@ export async function commitBatch(batchId: string, includeWarnings = false) {
 
   for (let i = 0; i < insertable.length; i += chunkSize) {
     const chunk = insertable.slice(i, i + chunkSize);
-// Track duplicate codes untuk upsert
-const codesToUpsert = chunk
-  .map((c) => (c as { code?: string }).code)
-  .filter(Boolean) as string[];
 
-// Kalau includeWarnings = true → mode upsert (update existing)
-let result;
-if (includeWarnings && codesToUpsert.length > 0 && entityType !== "orders") {
-  // Upsert by code
-  result = await admin
-    .from(entityType)
-    .upsert(chunk, { onConflict: "code" })
-    .select("id");
-} else {
-  // Insert only
-  result = await admin
-    .from(entityType)
-    .insert(chunk)
-    .select("id");
-}
-const { data: inserted, error: insErr } = result;
+    let result;
+    if (ENTITIES_WITH_CODE.has(entityType)) {
+      // Upsert by `code` → idempotent
+      result = await admin
+        .from(entityType)
+        .upsert(chunk, { onConflict: "code" })
+        .select("id");
+    } else {
+      // Insert biasa
+      result = await admin.from(entityType).insert(chunk).select("id");
+    }
+    const { data: inserted, error: insErr } = result;
 
     if (insErr) {
       await admin.from("migration_log").insert({
@@ -545,7 +758,6 @@ const { data: inserted, error: insErr } = result;
     committed += chunk.length;
   }
 
-  // Update batch
   const finalStatus = failed > 0 ? "PARTIAL" : "COMMITTED";
   await admin
     .from("migration_batches")
@@ -560,7 +772,9 @@ const { data: inserted, error: insErr } = result;
   await admin.from("migration_log").insert({
     batch_id: batchId,
     step: "COMMIT",
-    message: `Committed ${committed} rows to ${entityType}${failed > 0 ? ` (${failed} failed)` : ""}`,
+    message: `Committed ${committed} rows to ${entityType}${
+      failed > 0 ? ` (${failed} failed)` : ""
+    }`,
     details: { committed, failed },
     actor_user_id: user.id,
   });
